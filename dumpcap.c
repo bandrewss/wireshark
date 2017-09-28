@@ -253,11 +253,18 @@ typedef enum {
 } initfilter_status_t;
 
 typedef enum {
-    STATE_EXPECT_REC_HDR,
-    STATE_READ_REC_HDR,
-    STATE_EXPECT_DATA,
-    STATE_READ_DATA
-} cap_pipe_state_t;
+    PCAP_STATE_EXPECT_REC_HDR,
+    PCAP_STATE_READ_REC_HDR,
+    PCAP_STATE_EXPECT_DATA,
+    PCAP_STATE_READ_DATA
+} pcap_pipe_state_t;
+
+typedef enum {
+    PCAPNG_STATE_EXPECT_SCTN_HDR,
+    PCAPNG_STATE_READ_SCTN_HDR,
+    PCAPNG_STATE_EXPECT_DATA,
+    PCAPNG_STATE_READ_DATA
+} pcapng_pipe_state_t;
 
 typedef enum {
     PIPOK,
@@ -265,6 +272,14 @@ typedef enum {
     PIPERR,
     PIPNEXIST
 } cap_pipe_err_t;
+
+typedef struct _pcapng_section_header_block {
+    guint32 block_total_length;
+    guint32 magic;
+    guint16 version_major;
+    guint16 version_minor;
+    guint64 section_length;
+} pcapng_section_header_block;
 
 /*
  * A source of packets from which we're capturing.
@@ -299,19 +314,22 @@ typedef struct _capture_src {
     guint                        cap_pipe_max_pkt_size;  /**< Maximum packet size allowed */
 #if defined(_WIN32)
     char *                       cap_pipe_buf;           /**< Pointer to the buffer we read into */
-    DWORD                        cap_pipe_bytes_to_read; /**< Used by cap_pipe_dispatch */
-    DWORD                        cap_pipe_bytes_read;    /**< Used by cap_pipe_dispatch */
+    DWORD                        cap_pipe_bytes_to_read; /**< Used by pcap_pipe_dispatch */
+    DWORD                        cap_pipe_bytes_read;    /**< Used by pcap_pipe_dispatch */
 #else
-    size_t                       cap_pipe_bytes_to_read; /**< Used by cap_pipe_dispatch */
-    size_t                       cap_pipe_bytes_read;    /**< Used by cap_pipe_dispatch */
+    size_t                       cap_pipe_bytes_to_read; /**< Used by pcap_pipe_dispatch */
+    size_t                       cap_pipe_bytes_read;    /**< Used by pcap_pipe_dispatch */
 #endif
-    cap_pipe_state_t cap_pipe_state;
+    pcap_pipe_state_t pcap_pipe_state;
+    pcapng_pipe_state_t pcapng_pipe_state;
     cap_pipe_err_t cap_pipe_err;
 
 #if defined(_WIN32)
     GMutex                      *cap_pipe_read_mtx;
     GAsyncQueue                 *cap_pipe_pending_q, *cap_pipe_done_q;
 #endif
+
+    gboolean                     pipe_from_pcapng;       /**< TRUE if we're capturing from a pcapng pipe*/
 } capture_src;
 
 /*
@@ -1279,7 +1297,7 @@ cap_pipe_read(int pipe_fd, char *buf, size_t sz, gboolean from_socket _U_)
  * cap_pipe_done_q, otherwise an error is signaled. No data is passed in
  * the queues themselves (yet).
  *
- * We might want to move some of the cap_pipe_dispatch logic here so that
+ * We might want to move some of the pcap_pipe_dispatch logic here so that
  * we can let cap_thread_read run independently, queuing up multiple reads
  * for the main thread (and possibly get rid of cap_pipe_read_mtx).
  */
@@ -1801,14 +1819,16 @@ cap_pipe_open_live(char *pipename,
         pcap_src->cap_pipe_modified = TRUE;
         break;
     case BLOCK_TYPE_SHB:
-        /* This isn't pcap, it's pcapng.  We don't yet support
-           reading it. */
-        g_snprintf(errmsg, errmsgl, "Capturing from a pipe doesn't support pcapng format.");
-        goto error;
+        pcap_src->pipe_from_pcapng = TRUE;
+        pcap_src->pcapng_pipe_state = PCAPNG_STATE_EXPECT_SCTN_HDR;
+        g_snprintf(errmsg, errmsgl, "Is pcapng file.");
+        printf("hello buddy\n");
+        break;
     default:
         /* Not a pcap type we know about, or not pcap at all. */
         g_snprintf(errmsg, errmsgl, "Unrecognized libpcap format or not libpcap data.");
-        goto error;
+        printf("hello\n");
+        return;
     }
 
 #ifdef _WIN32
@@ -1881,7 +1901,7 @@ cap_pipe_open_live(char *pipename,
         goto error;
     }
 
-    pcap_src->cap_pipe_state = STATE_EXPECT_REC_HDR;
+    pcap_src->pcap_pipe_state = PCAP_STATE_EXPECT_REC_HDR;
     pcap_src->cap_pipe_err = PIPOK;
     pcap_src->cap_pipe_fd = fd;
     return;
@@ -1900,7 +1920,8 @@ error:
 /* We read one record from the pipe, take care of byte order in the record
  * header, write the record to the capture file, and update capture statistics. */
 static int
-cap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, int errmsgl)
+pcap_pipe_dispatch
+(loop_data *ld, capture_src *pcap_src, char *errmsg, int errmsgl)
 {
     struct pcap_pkthdr  phdr;
     enum { PD_REC_HDR_READ, PD_DATA_READ, PD_PIPE_EOF, PD_PIPE_ERR,
@@ -1916,17 +1937,17 @@ cap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, int errmsg
     guint new_bufsize;
 
 #ifdef LOG_CAPTURE_VERBOSE
-    g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_DEBUG, "cap_pipe_dispatch");
+    g_log(LOG_DOMAIN_CAPTURE_CHILD, G_LOG_LEVEL_DEBUG, "pcap_pipe_dispatch");
 #endif
 
-    switch (pcap_src->cap_pipe_state) {
+    switch (pcap_src->pcap_pipe_state) {
 
-    case STATE_EXPECT_REC_HDR:
+    case PCAP_STATE_EXPECT_REC_HDR:
 #ifdef _WIN32
         if (g_mutex_trylock(pcap_src->cap_pipe_read_mtx)) {
 #endif
 
-            pcap_src->cap_pipe_state = STATE_READ_REC_HDR;
+            pcap_src->pcap_pipe_state = PCAP_STATE_READ_REC_HDR;
             pcap_src->cap_pipe_bytes_to_read = pcap_src->cap_pipe_modified ?
                 sizeof(struct pcaprec_modified_hdr) : sizeof(struct pcaprec_hdr);
             pcap_src->cap_pipe_bytes_read = 0;
@@ -1939,7 +1960,7 @@ cap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, int errmsg
 #endif
         /* Fall through */
 
-    case STATE_READ_REC_HDR:
+    case PCAP_STATE_READ_REC_HDR:
 #ifdef _WIN32
         if (pcap_src->from_cap_socket)
 #endif
@@ -1981,12 +2002,12 @@ cap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, int errmsg
         result = PD_REC_HDR_READ;
         break;
 
-    case STATE_EXPECT_DATA:
+    case PCAP_STATE_EXPECT_DATA:
 #ifdef _WIN32
         if (g_mutex_trylock(pcap_src->cap_pipe_read_mtx)) {
 #endif
 
-            pcap_src->cap_pipe_state = STATE_READ_DATA;
+            pcap_src->pcap_pipe_state = PCAP_STATE_READ_DATA;
             pcap_src->cap_pipe_bytes_to_read = pcap_src->cap_pipe_rechdr.hdr.incl_len;
             pcap_src->cap_pipe_bytes_read = 0;
 
@@ -1998,7 +2019,7 @@ cap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, int errmsg
 #endif
         /* Fall through */
 
-    case STATE_READ_DATA:
+    case PCAP_STATE_READ_DATA:
 #ifdef _WIN32
         if (pcap_src->from_cap_socket)
 #endif
@@ -2044,10 +2065,10 @@ cap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, int errmsg
         break;
 
     default:
-        g_snprintf(errmsg, errmsgl, "cap_pipe_dispatch: invalid state");
+        g_snprintf(errmsg, errmsgl, "pcap_pipe_dispatch: invalid state");
         result = PD_ERR;
 
-    } /* switch (pcap_src->cap_pipe_state) */
+    } /* switch (pcap_src->pcap_pipe_state) */
 
     /*
      * We've now read as much data as we were expecting, so process it.
@@ -2062,7 +2083,7 @@ cap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, int errmsg
             /*
              * The record contains more data than the advertised/allowed in the
              * pcap header, do not try to read more data (do not change to
-             * STATE_EXPECT_DATA) as that would not fit in the buffer and
+             * PCAP_STATE_EXPECT_DATA) as that would not fit in the buffer and
              * instead stop with an error.
              */
             g_snprintf(errmsg, errmsgl, "Frame %u too long (%d bytes)",
@@ -2095,7 +2116,7 @@ cap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, int errmsg
          * time.
          */
         if (pcap_src->cap_pipe_rechdr.hdr.incl_len) {
-            pcap_src->cap_pipe_state = STATE_EXPECT_DATA;
+            pcap_src->pcap_pipe_state = PCAP_STATE_EXPECT_DATA;
             return 0;
         }
 
@@ -2111,12 +2132,13 @@ cap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, int errmsg
         phdr.caplen = pcap_src->cap_pipe_rechdr.hdr.incl_len;
         phdr.len = pcap_src->cap_pipe_rechdr.hdr.orig_len;
 
+
         if (use_threads) {
             capture_loop_queue_packet_cb((u_char *)pcap_src, &phdr, pcap_src->cap_pipe_databuf);
         } else {
             capture_loop_write_packet_cb((u_char *)pcap_src, &phdr, pcap_src->cap_pipe_databuf);
         }
-        pcap_src->cap_pipe_state = STATE_EXPECT_REC_HDR;
+        pcap_src->pcap_pipe_state = PCAP_STATE_EXPECT_REC_HDR;
         return 1;
 
     case PD_PIPE_EOF:
@@ -2144,6 +2166,57 @@ cap_pipe_dispatch(loop_data *ld, capture_src *pcap_src, char *errmsg, int errmsg
     /* Return here rather than inside the switch to prevent GCC warning */
     return -1;
 }
+
+/* We read one record from the pipe, take care of byte order in the record
+ * header, write the record to the capture file, and update capture statistics. */
+static int
+pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int errmsgl)
+{
+    g_snprintf(errmsg, errmsgl,
+               "Hello from pcapng_pipe_dispatch");
+    printf("pcapng_pipe_dispatch\n");
+
+    ld = ld;
+    ssize_t   b;
+    //guint new_bufsize;
+
+    char buffer[256];
+    char* buf = &buffer[0];
+
+    switch(pcapng_src->pcapng_pipe_state)
+    {
+        case PCAPNG_STATE_EXPECT_SCTN_HDR:
+            printf("Expected Section Header\n");
+
+            pcapng_src->cap_pipe_bytes_read = 0;
+            pcapng_src->cap_pipe_bytes_to_read = 168;
+
+            pcapng_src->pcapng_pipe_state = PCAPNG_STATE_READ_SCTN_HDR;
+             /* fall through */
+        case PCAPNG_STATE_READ_SCTN_HDR:
+            printf("Reading Section Header\n");
+
+            b = cap_pipe_read(pcapng_src->cap_pipe_fd, buf,
+                 pcapng_src->cap_pipe_bytes_to_read - pcapng_src->cap_pipe_bytes_read, pcapng_src->from_cap_socket);
+
+            printf("b = %li\n", b);
+            //printf("rechdr = %168X\n", buf);
+
+            for(int i = 0; i < 168; ++i )
+            {
+                printf(" %02x", (unsigned)buffer[i]);
+            }
+            printf("\n");
+
+        case PCAPNG_STATE_EXPECT_DATA:
+        ;
+        case PCAPNG_STATE_READ_DATA:
+        ;
+    }
+
+    return -1;
+}
+
 
 
 /** Open the capture input file (pcap or capture pipe).
@@ -2254,7 +2327,7 @@ capture_loop_open_input(capture_options *capture_opts, loop_data *ld,
 #endif
         pcap_src->cap_pipe_bytes_to_read = 0;
         pcap_src->cap_pipe_bytes_read = 0;
-        pcap_src->cap_pipe_state = STATE_EXPECT_REC_HDR;
+        pcap_src->pcap_pipe_state = PCAP_STATE_EXPECT_REC_HDR;
         pcap_src->cap_pipe_err = PIPOK;
 #ifdef _WIN32
 #if GLIB_CHECK_VERSION(2,31,0)
@@ -2676,7 +2749,15 @@ capture_loop_dispatch(loop_data *ld,
              * "select()" says we can read from the pipe without blocking
              */
 #endif
-            inpkts = cap_pipe_dispatch(ld, pcap_src, errmsg, errmsg_len);
+            if (pcap_src->pipe_from_pcapng)
+            {
+                inpkts = pcapng_pipe_dispatch(ld, pcap_src, errmsg, errmsg_len);
+            }
+            else
+            {
+                inpkts = pcap_pipe_dispatch(ld, pcap_src, errmsg, errmsg_len);
+            }
+
             if (inpkts < 0) {
                 ld->go = FALSE;
             }
