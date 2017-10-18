@@ -268,3 +268,5 @@ packaging/rpm/SPECS/wireshark.spec
 packaging/svr4/checkinstall
 packaging/svr4/pkginfo
 vgcore.*
+.idea/
+cmake-build-debug/
