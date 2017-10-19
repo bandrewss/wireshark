@@ -276,6 +276,7 @@ typedef enum {
 
 /*
  * Copied from pcopio.c.
+ * ///has been modified///
  *
  * Might be better to be put in a header file and included
  */
@@ -289,21 +290,22 @@ typedef enum {
 
 #define PCAPNG_HEADER_SIZE 8;
 
-/* Section Header Block without options and trailing Block Total Length */
-struct shb {
+typedef struct _pcapng_hdr {
     guint32 block_type;
     guint32 block_total_length;
+} pcapng_blk_hdr;
+
+/* Section Header Block without options and trailing Block Total Length */
+typedef struct _pcapng_shb {
     guint32 byte_order_magic;
     guint16 major_version;
     guint16 minor_version;
     guint64 section_length;
-};
+} pcapng_shb;
 #define SECTION_HEADER_BLOCK_TYPE 0x0A0D0D0A
 
 /* Interface Description Block without options and trailing Block Total Length */
 struct idb {
-    guint32 block_type;
-    guint32 block_total_length;
     guint16 link_type;
     guint16 reserved;
     guint32 snap_len;
@@ -313,8 +315,6 @@ struct idb {
 /* Interface Statistics Block without actual packet, options, and trailing
    Block Total Length */
 struct isb {
-    guint32 block_type;
-    guint32 block_total_length;
     guint32 interface_id;
     guint32 timestamp_high;
     guint32 timestamp_low;
@@ -324,8 +324,6 @@ struct isb {
 /* Enhanced Packet Block without actual packet, options, and trailing
    Block Total Length */
 struct epb {
-    guint32 block_type;
-    guint32 block_total_length;
     guint32 interface_id;
     guint32 timestamp_high;
     guint32 timestamp_low;
@@ -359,7 +357,8 @@ typedef struct _capture_src {
     struct pcap_hdr              pcap_pipe_hdr;          /**< Pcap header when capturing from a pipe */
     struct pcaprec_modified_hdr  cap_pipe_rechdr;        /**< Pcap record header when capturing from a pipe */
 
-    struct shb                   pcapng_pipe_shb;        /**< Pcapng section header block when capturing from a pipe */
+    pcapng_blk_hdr               pcapng_pipe_blk_hdr;
+    pcapng_shb                   pcapng_pipe_shb;        /**< Pcapng section header block when capturing from a pipe */
 #ifdef _WIN32
     HANDLE                       cap_pipe_h;             /**< The handle of the capture pipe */
 #endif
@@ -1877,7 +1876,7 @@ cap_pipe_open_live(char *pipename,
         break;
     case BLOCK_TYPE_SHB:
         pcap_src->pipe_from_pcapng = TRUE;
-        pcap_src->pcapng_pipe_shb.block_type=magic;
+        pcap_src->pcapng_pipe_blk_hdr.block_type=magic;
         pcap_src->pcapng_pipe_state = PCAPNG_STATE_EXPECT_SHB_HDR;
         printf(errmsg, errmsgl, "Is pcapng file.");
         printf("hello buddy\n");
@@ -1892,7 +1891,7 @@ cap_pipe_open_live(char *pipename,
         /* read the next four octets to get the length of the SHB */
 
         bytes_read = 0;
-        while(bytes_read < sizeof(pcap_src->pcapng_pipe_shb.block_total_length)) {
+        while(bytes_read < sizeof(pcap_src->pcapng_pipe_blk_hdr.block_total_length)) {
             sel_ret = cap_pipe_select(fd);
 
             if(sel_ret < 0) {
@@ -1900,8 +1899,8 @@ cap_pipe_open_live(char *pipename,
                            "Unexpected error from select: %s.", g_strerror(errno));
                 goto error;
             } else if (sel_ret > 0) {
-                b = cap_pipe_read(fd, ((char *)&pcap_src->pcapng_pipe_shb.block_total_length)+bytes_read,
-                    sizeof(pcap_src->pcapng_pipe_shb.block_total_length)-bytes_read,
+                b = cap_pipe_read(fd, ((char *)&pcap_src->pcapng_pipe_blk_hdr.block_total_length)+bytes_read,
+                    sizeof(pcap_src->pcapng_pipe_blk_hdr.block_total_length)-bytes_read,
                                   pcap_src->from_cap_socket);
 
                 if (b <= 0) {
@@ -2288,8 +2287,7 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
             break;
 
         case PCAPNG_STATE_EXPECT_SHB_HDR:
-            printf("Sizeof length: %zu\n", sizeof(pcapng_src->pcapng_pipe_shb.block_total_length));
-            printf("length: %d\n", pcapng_src->pcapng_pipe_shb.block_total_length);
+            printf("length: %d\n", pcapng_src->pcapng_pipe_blk_hdr.block_total_length);
 
 
             pcapng_src->cap_pipe_bytes_read = PCAPNG_HEADER_SIZE;
@@ -2363,8 +2361,8 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
             if(pcapng_src->pcapng_pipe_shb.byte_order_magic == PCAPNG_SWAPPED_MAGIC) {
                 printf("swapping bytes\n");
 
-                pcapng_src->pcapng_pipe_shb.block_total_length =
-                        GUINT32_SWAP_LE_BE(pcapng_src->pcapng_pipe_shb.block_total_length);
+                pcapng_src->pcapng_pipe_blk_hdr.block_total_length =
+                        GUINT32_SWAP_LE_BE(pcapng_src->pcapng_pipe_blk_hdr.block_total_length);
                 pcapng_src->pcapng_pipe_shb.major_version =
                         GUINT16_SWAP_LE_BE(pcapng_src->pcapng_pipe_shb.major_version);
                 pcapng_src->pcapng_pipe_shb.minor_version =
@@ -2373,10 +2371,10 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
                         GUINT64_SWAP_LE_BE(pcapng_src->pcapng_pipe_shb.section_length);
             }
 
-            pcapng_src->cap_pipe_bytes_to_read = pcapng_src->pcapng_pipe_shb.block_total_length -
+            pcapng_src->cap_pipe_bytes_to_read = pcapng_src->pcapng_pipe_blk_hdr.block_total_length -
                                                     pcapng_src->cap_pipe_bytes_read;
 
-            printf("block length: %d\n", pcapng_src->pcapng_pipe_shb.block_total_length);
+            printf("block length: %d\n", pcapng_src->pcapng_pipe_blk_hdr.block_total_length);
             printf("bytes read: %zu\n", pcapng_src->cap_pipe_bytes_read);
             printf("bytes to read: %zu\n", pcapng_src->cap_pipe_bytes_to_read);
 
@@ -2393,7 +2391,7 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
 
             /* get the length from the end of the databuf */
             bttm_length = *(int *)(pcapng_src->cap_pipe_databuf +
-                     (pcapng_src->cap_pipe_databuf_size - sizeof(pcapng_src->pcapng_pipe_shb.block_total_length)));
+                     (pcapng_src->cap_pipe_databuf_size - sizeof(pcapng_src->pcapng_pipe_blk_hdr.block_total_length)));
 
             if(pcapng_src->pcapng_pipe_shb.byte_order_magic == PCAPNG_SWAPPED_MAGIC) {
                 printf("swapping bytes\n");
@@ -2401,7 +2399,7 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
                 bttm_length = GUINT32_SWAP_LE_BE(bttm_length);
             }
 
-            if( bttm_length == pcapng_src->pcapng_pipe_shb.block_total_length) {
+            if( bttm_length == pcapng_src->pcapng_pipe_blk_hdr.block_total_length) {
                 printf("we made it guys\n");
             } else {
                 printf("we lost\n");
