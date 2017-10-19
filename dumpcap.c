@@ -2266,6 +2266,7 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
                "making the compiler happy temporarily");
 
     printf("pcapng_pipe_dispatch\n");
+    printf("pcang_pipe_state: %d\n", pcapng_src->pcapng_pipe_state);
 
 
     ld = ld;
@@ -2280,17 +2281,34 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
 
     switch(pcapng_src->pcapng_pipe_state) {
 
-        case PCAPNG_STATE_EXPECT_BLK_HDR:;
+        case PCAPNG_STATE_EXPECT_BLK_HDR:
+            pcapng_src->cap_pipe_bytes_to_read = sizeof(pcapng_src->pcapng_pipe_blk_hdr);
+            pcapng_src->cap_pipe_bytes_read = 0;
 
             /* fall through */
         case PCAPNG_STATE_READ_BLK_HDR:
+
+            b = cap_pipe_read(pcapng_src->cap_pipe_fd,
+                  (char *) &pcapng_src->pcapng_pipe_blk_hdr.block_type + pcapng_src->cap_pipe_bytes_read,
+                  pcapng_src->cap_pipe_bytes_to_read - pcapng_src->cap_pipe_bytes_to_read,
+                  pcapng_src->from_cap_socket);
+
+            if (b <= 0) {
+                if (b == 0)
+                    result = PNGD_PIPE_EOF;
+                else
+                    result = PNGD_PIPE_ERR;
+                break;
+            }
+
+            result = PNGD_BLK_HDR_READ;
             break;
 
         case PCAPNG_STATE_EXPECT_SHB_HDR:
             printf("length: %d\n", pcapng_src->pcapng_pipe_blk_hdr.block_total_length);
 
 
-            pcapng_src->cap_pipe_bytes_read = PCAPNG_HEADER_SIZE;
+            pcapng_src->cap_pipe_bytes_read = 0;
             pcapng_src->cap_pipe_bytes_to_read = sizeof(pcapng_src->pcapng_pipe_shb);
 
             pcapng_src->pcapng_pipe_state = PCAPNG_STATE_READ_SHB_HDR;
@@ -2298,7 +2316,8 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
             /* fall through */
         case PCAPNG_STATE_READ_SHB_HDR:
 
-            b = cap_pipe_read(pcapng_src->cap_pipe_fd, (char *) &pcapng_src->pcapng_pipe_shb.byte_order_magic,
+            b = cap_pipe_read(pcapng_src->cap_pipe_fd,
+                              (char *) &pcapng_src->pcapng_pipe_shb.byte_order_magic + pcapng_src->cap_pipe_bytes_read,
                               pcapng_src->cap_pipe_bytes_to_read - pcapng_src->cap_pipe_bytes_read,
                               pcapng_src->from_cap_socket);
 
@@ -2355,10 +2374,25 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
 
     switch(result) {
         case PNGD_BLK_HDR_READ:
+            if(pcapng_src->cap_pipe_byte_swapped) {
+                pcapng_src->pcapng_pipe_blk_hdr.block_type =
+                    GUINT32_SWAP_LE_BE(pcapng_src->pcapng_pipe_blk_hdr.block_type);
+                pcapng_src->pcapng_pipe_blk_hdr.block_total_length =
+                    GUINT32_SWAP_LE_BE(pcapng_src->pcapng_pipe_blk_hdr.block_total_length);
+            }
+
+            printf("block type: %d\ntotal length%d\n",
+                    pcapng_src->pcapng_pipe_blk_hdr.block_type,
+                    pcapng_src->pcapng_pipe_blk_hdr.block_total_length);
+
+            return_code = -1;
+
             break;
 
         case PNGD_SHB_HDR_READ:
-            if(pcapng_src->pcapng_pipe_shb.byte_order_magic == PCAPNG_SWAPPED_MAGIC) {
+            pcapng_src->cap_pipe_byte_swapped = pcapng_src->pcapng_pipe_shb.byte_order_magic == PCAPNG_SWAPPED_MAGIC;
+
+            if(pcapng_src->cap_pipe_byte_swapped) {
                 printf("swapping bytes\n");
 
                 pcapng_src->pcapng_pipe_blk_hdr.block_total_length =
@@ -2371,8 +2405,11 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
                         GUINT64_SWAP_LE_BE(pcapng_src->pcapng_pipe_shb.section_length);
             }
 
+            /* the length of the rest of the block, which is the block length
+             * minus the bytes already read */
             pcapng_src->cap_pipe_bytes_to_read = pcapng_src->pcapng_pipe_blk_hdr.block_total_length -
-                                                    pcapng_src->cap_pipe_bytes_read;
+                                                    (sizeof(pcapng_src->pcapng_pipe_blk_hdr) +
+                                                    pcapng_src->cap_pipe_bytes_read);
 
             printf("block length: %d\n", pcapng_src->pcapng_pipe_blk_hdr.block_total_length);
             printf("bytes read: %zu\n", pcapng_src->cap_pipe_bytes_read);
@@ -2393,7 +2430,7 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
             bttm_length = *(int *)(pcapng_src->cap_pipe_databuf +
                      (pcapng_src->cap_pipe_databuf_size - sizeof(pcapng_src->pcapng_pipe_blk_hdr.block_total_length)));
 
-            if(pcapng_src->pcapng_pipe_shb.byte_order_magic == PCAPNG_SWAPPED_MAGIC) {
+            if(pcapng_src->cap_pipe_byte_swapped) {
                 printf("swapping bytes\n");
 
                 bttm_length = GUINT32_SWAP_LE_BE(bttm_length);
@@ -2408,6 +2445,7 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
             pcapng_src->pcapng_pipe_state = PCAPNG_STATE_EXPECT_BLK_HDR;
 
             return_code = -1;
+
             break;
 
         case PNGD_PIPE_EOF:
