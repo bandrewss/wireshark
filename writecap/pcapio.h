@@ -23,7 +23,34 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/* Magic numbers in ".pcapng" files.
+ *
+ * .pcapng file records are written in the byte order of the host that
+ * writes them, and the reader is expected to fix this up.
+ * PCAPNG_MAGIC is the magic number, in host byte order;
+ * PCAPNG_SWAPPED_MAGIC is a byte-swapped version of that.
+ */
+#define PCAPNG_MAGIC         0x1A2B3C4D
+#define PCAPNG_SWAPPED_MAGIC 0xD4C3B2A1
+
+/* Currently we are only supporting the initial version of
+   the file format. */
+#define PCAPNG_MAJOR_VERSION 1
+#define PCAPNG_MINOR_VERSION 0
+
+#define SECTION_HEADER_BLOCK_TYPE 0x0A0D0D0A
+#define INTERFACE_DESCRIPTION_BLOCK_TYPE 0x00000001
+#define INTERFACE_STATISTICS_BLOCK_TYPE 0x00000005
+#define ENHANCED_PACKET_BLOCK_TYPE 0x00000006
+
+
 /* Writing pcap files */
+
+/** Write to capture file */
+extern gboolean
+write_to_file(FILE* pfile, const guint8* data, size_t data_length,
+              guint64 *bytes_written, int *err);
+
 
 /** Write the file header to a dump file.
    Returns TRUE on success, FALSE on failure.
