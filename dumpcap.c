@@ -2446,7 +2446,7 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
 
             pcapng_src->pcapng_pipe_state = PCAPNG_STATE_EXPECT_BLK_HDR;
 
-            //packets_read = -1;
+            //packets_read = 1;
 
             break;
 
