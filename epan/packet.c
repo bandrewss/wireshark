@@ -49,7 +49,6 @@
 #include <epan/expert.h>
 #include <epan/prefs.h>
 #include <epan/range.h>
-#include <epan/asm_utils.h>
 
 #include <wsutil/str_util.h>
 #include <wsutil/ws_printf.h> /* ws_debug_printf */
@@ -215,7 +214,7 @@ packet_init(void)
 	heur_dissector_lists = g_hash_table_new_full(g_str_hash, g_str_equal,
 			NULL, destroy_heuristic_dissector_list);
 
-	heuristic_short_names  = g_hash_table_new(wrs_str_hash, g_str_equal);
+	heuristic_short_names  = g_hash_table_new(g_str_hash, g_str_equal);
 }
 
 void
@@ -326,9 +325,6 @@ init_dissection(void)
 	/* Initialize the table of conversations. */
 	epan_conversation_init();
 
-	/* Initialize the table of circuits. */
-	epan_circuit_init();
-
 	/* Initialize protocol-specific variables. */
 	g_slist_foreach(init_routines, &call_routine, NULL);
 
@@ -342,9 +338,6 @@ init_dissection(void)
 void
 cleanup_dissection(void)
 {
-	/* Cleanup the table of circuits. */
-	epan_circuit_cleanup();
-
 	/* Cleanup protocol-specific variables. */
 	g_slist_foreach(cleanup_routines, &call_routine, NULL);
 
@@ -541,9 +534,10 @@ dissect_record(epan_dissect_t *edt, int file_type_subtype,
 	clear_address(&edt->pi.net_dst);
 	clear_address(&edt->pi.src);
 	clear_address(&edt->pi.dst);
-	edt->pi.ctype = CT_NONE;
 	edt->pi.noreassembly_reason = "";
 	edt->pi.ptype = PT_NONE;
+	edt->pi.use_endpoint = FALSE;
+	edt->pi.conv_endpoint = NULL;
 	edt->pi.p2p_dir = P2P_DIR_UNKNOWN;
 	edt->pi.link_dir = LINK_DIR_UNKNOWN;
 	edt->pi.layers = wmem_list_new(edt->pi.pool);
@@ -607,9 +601,10 @@ dissect_file(epan_dissect_t *edt, struct wtap_pkthdr *phdr,
 	clear_address(&edt->pi.net_dst);
 	clear_address(&edt->pi.src);
 	clear_address(&edt->pi.dst);
-	edt->pi.ctype = CT_NONE;
 	edt->pi.noreassembly_reason = "";
 	edt->pi.ptype = PT_NONE;
+	edt->pi.use_endpoint = FALSE;
+	edt->pi.conv_endpoint = NULL;
 	edt->pi.p2p_dir = P2P_DIR_UNKNOWN;
 	edt->pi.link_dir = LINK_DIR_UNKNOWN;
 	edt->pi.layers = wmem_list_new(edt->pi.pool);
@@ -710,11 +705,12 @@ static int
 call_dissector_work(dissector_handle_t handle, tvbuff_t *tvb, packet_info *pinfo_arg,
 		    proto_tree *tree, gboolean add_proto_name, void *data)
 {
- 	packet_info *pinfo = pinfo_arg;
+	packet_info *pinfo = pinfo_arg;
 	const char  *saved_proto;
 	guint16      saved_can_desegment;
 	int          len;
 	guint        saved_layers_len = 0;
+	int          saved_tree_count = tree ? tree->tree_data->count : 0;
 
 	if (handle->protocol != NULL &&
 	    !proto_is_protocol_enabled(handle->protocol)) {
@@ -747,9 +743,11 @@ call_dissector_work(dissector_handle_t handle, tvbuff_t *tvb, packet_info *pinfo
 			proto_get_protocol_short_name(handle->protocol);
 
 		/*
-		 * Add the protocol name to the layers
-		 * if not told not to. Asn2wrs generated dissectors may be added multiple times otherwise.
+		 * Add the protocol name to the layers only if told to
+		 * do so. Asn2wrs generated dissectors may be added
+		 * multiple times otherwise.
 		 */
+		/* XXX Should we check for a duplicate layer here? */
 		if (add_proto_name) {
 			pinfo->curr_layer_num++;
 			wmem_list_append(pinfo->layers, GINT_TO_POINTER(proto_get_id(handle->protocol)));
@@ -760,22 +758,24 @@ call_dissector_work(dissector_handle_t handle, tvbuff_t *tvb, packet_info *pinfo
 		len = call_dissector_work_error(handle, tvb, pinfo, tree, data);
 	} else {
 		/*
- 		 * Just call the subdissector.
- 		 */
+		 * Just call the subdissector.
+		 */
 		len = call_dissector_through_handle(handle, tvb, pinfo, tree, data);
 	}
-	if (len == 0) {
+	if (handle->protocol != NULL && !proto_is_pino(handle->protocol) && add_proto_name &&
+		(len == 0 || (tree && saved_tree_count == tree->tree_data->count))) {
 		/*
- 		 * That dissector didn't accept the packet, so
- 		 * remove its protocol's name from the list
- 		 * of protocols.
+		 * We've added a layer and either the dissector didn't
+		 * accept the packet or we didn't add any items to the
+		 * tree. Remove it.
 		 */
 		while (wmem_list_count(pinfo->layers) > saved_layers_len) {
+			pinfo->curr_layer_num--;
 			wmem_list_remove_frame(pinfo->layers, wmem_list_tail(pinfo->layers));
 		}
- 	}
- 	pinfo->current_proto = saved_proto;
- 	pinfo->can_desegment = saved_can_desegment;
+	}
+	pinfo->current_proto = saved_proto;
+	pinfo->can_desegment = saved_can_desegment;
 	return len;
 }
 
@@ -1025,21 +1025,28 @@ dissector_add_uint(const char *name, const guint32 pattern, dissector_handle_t h
 
 
 
-void dissector_add_uint_range(const char *abbrev, range_t *range,
+void dissector_add_uint_range(const char *name, range_t *range,
 			      dissector_handle_t handle)
 {
+	dissector_table_t  sub_dissectors;
 	guint32 i, j;
 
 	if (range) {
 		if (range->nranges == 0) {
-			/* Even an empty range would want a chance for Decode As */
-			dissector_add_for_decode_as(abbrev, handle);
+			/*
+			 * Even an empty range would want a chance for
+			 * Decode As, if the dissector table supports
+			 * it.
+			 */
+			sub_dissectors = find_dissector_table(name);
+			if (sub_dissectors->supports_decode_as)
+				dissector_add_for_decode_as(name, handle);
 		}
 		else {
 			for (i = 0; i < range->nranges; i++) {
 				for (j = range->ranges[i].low; j < range->ranges[i].high; j++)
-					dissector_add_uint(abbrev, j, handle);
-				dissector_add_uint(abbrev, range->ranges[i].high, handle);
+					dissector_add_uint(name, j, handle);
+				dissector_add_uint(name, range->ranges[i].high, handle);
 			}
 		}
 	}
@@ -1080,13 +1087,13 @@ void dissector_add_uint_with_preference(const char *name, const guint32 pattern,
 	dissector_add_uint(name, pattern, handle);
 }
 
-void dissector_add_uint_range_with_preference(const char *abbrev, const char* range_str,
+void dissector_add_uint_range_with_preference(const char *name, const char* range_str,
     dissector_handle_t handle)
 {
 	range_t** range;
 	module_t *module;
 	gchar *description, *title;
-	dissector_table_t  pref_dissector_table = find_dissector_table( abbrev);
+	dissector_table_t  pref_dissector_table = find_dissector_table( name);
 	int proto_id = proto_get_id(handle->protocol);
 	guint32 max_value = 0;
 
@@ -1105,7 +1112,7 @@ void dissector_add_uint_range_with_preference(const char *abbrev, const char* ra
 	/* Some preference callback functions use the proto_reg_handoff_
 		routine to apply preferences, which could duplicate the
 		registration of a preference.  Check for that here */
-	if (prefs_find_preference(module, abbrev) == NULL) {
+	if (prefs_find_preference(module, name) == NULL) {
 		description = wmem_strdup_printf(wmem_epan_scope(), "%s %s(s)",
 									    proto_get_protocol_short_name(handle->protocol), pref_dissector_table->ui_name);
 		title = wmem_strdup_printf(wmem_epan_scope(), "%s(s)", pref_dissector_table->ui_name);
@@ -1127,15 +1134,15 @@ void dissector_add_uint_range_with_preference(const char *abbrev, const char* ra
 			break;
 
 		default:
-			g_error("The dissector table %s (%s) is not an integer type - are you using a buggy plugin?", abbrev, pref_dissector_table->ui_name);
+			g_error("The dissector table %s (%s) is not an integer type - are you using a buggy plugin?", name, pref_dissector_table->ui_name);
 			g_assert_not_reached();
 		}
 
 		range_convert_str(wmem_epan_scope(), range, range_str, max_value);
-		prefs_register_decode_as_range_preference(module, abbrev, title, description, range, max_value);
+		prefs_register_decode_as_range_preference(module, name, title, description, range, max_value);
 	}
 
-	dissector_add_uint_range(abbrev, *range, handle);
+	dissector_add_uint_range(name, *range, handle);
 }
 
 /* Delete the entry for a dissector in a uint dissector table
@@ -1170,7 +1177,7 @@ dissector_delete_uint(const char *name, const guint32 pattern,
 	}
 }
 
-void dissector_delete_uint_range(const char *abbrev, range_t *range,
+void dissector_delete_uint_range(const char *name, range_t *range,
 				 dissector_handle_t handle)
 {
 	guint32 i, j;
@@ -1178,8 +1185,8 @@ void dissector_delete_uint_range(const char *abbrev, range_t *range,
 	if (range) {
 		for (i = 0; i < range->nranges; i++) {
 			for (j = range->ranges[i].low; j < range->ranges[i].high; j++)
-				dissector_delete_uint(abbrev, j, handle);
-			dissector_delete_uint(abbrev, range->ranges[i].high, handle);
+				dissector_delete_uint(name, j, handle);
+			dissector_delete_uint(name, range->ranges[i].high, handle);
 		}
 	}
 }
@@ -1879,9 +1886,9 @@ int dissector_try_payload_new(dissector_table_t sub_dissectors,
 
 /* Change the entry for a dissector in a payload (FT_NONE) dissector table
    with a particular pattern to use a new dissector handle. */
-void dissector_change_payload(const char *abbrev, dissector_handle_t handle)
+void dissector_change_payload(const char *name, dissector_handle_t handle)
 {
-	dissector_change_uint(abbrev, 0, handle);
+	dissector_change_uint(name, 0, handle);
 }
 
 /* Reset payload (FT_NONE) dissector table to its initial value. */
@@ -2614,6 +2621,8 @@ dissector_try_heuristic(heur_dissector_list_t sub_dissectors, tvbuff_t *tvb,
 	guint              saved_layers_len = 0;
 	heur_dtbl_entry_t *hdtbl_entry;
 	int                proto_id;
+	int                len;
+	int                saved_tree_count = tree ? tree->tree_data->count : 0;
 
 	/* can_desegment is set to 2 by anyone which offers this api/service.
 	   then everytime a subdissector is called it is decremented by one.
@@ -2660,24 +2669,29 @@ dissector_try_heuristic(heur_dissector_list_t sub_dissectors, tvbuff_t *tvb,
 			 * Add the protocol name to the layers; we'll remove it
 			 * if the dissector fails.
 			 */
+			pinfo->curr_layer_num++;
 			wmem_list_append(pinfo->layers, GINT_TO_POINTER(proto_id));
 		}
 
 		pinfo->heur_list_name = hdtbl_entry->list_name;
 
-		if ((hdtbl_entry->dissector)(tvb, pinfo, tree, data)) {
+		len = (hdtbl_entry->dissector)(tvb, pinfo, tree, data);
+		if (hdtbl_entry->protocol != NULL &&
+			(len == 0 || (tree && saved_tree_count == tree->tree_data->count))) {
+			/*
+			 * We added a protocol layer above. The dissector
+			 * didn't accept the packet or it didn't add any
+			 * items to the tree so remove it from the list.
+			 */
+			while (wmem_list_count(pinfo->layers) > saved_layers_len) {
+				pinfo->curr_layer_num--;
+				wmem_list_remove_frame(pinfo->layers, wmem_list_tail(pinfo->layers));
+			}
+		}
+		if (len) {
 			*heur_dtbl_entry = hdtbl_entry;
 			status = TRUE;
 			break;
-		} else {
-			/*
-			 * That dissector didn't accept the packet, so
-			 * remove its protocol's name from the list
-			 * of protocols.
-			 */
-			while (wmem_list_count(pinfo->layers) > saved_layers_len) {
-				wmem_list_remove_frame(pinfo->layers, wmem_list_tail(pinfo->layers));
-			}
 		}
 	}
 
@@ -3300,6 +3314,13 @@ dissector_dump_dissector_tables_display (gpointer key, gpointer user_data _U_)
 	default:
 		break;
 	}
+	if (table->protocol != NULL) {
+		ws_debug_printf("\t%s",
+		    proto_get_protocol_short_name(table->protocol));
+	} else
+		ws_debug_printf("\t(no protocol)");
+	ws_debug_printf("\tDecode As %ssupported",
+	    table->supports_decode_as ? "" : "not ");
 	ws_debug_printf("\n");
 }
 

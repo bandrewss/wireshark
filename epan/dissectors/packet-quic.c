@@ -110,6 +110,8 @@ static dissector_handle_t ssl_handle;
 const value_string quic_version_vals[] = {
     { 0xff000004, "draft-04" },
     { 0xff000005, "draft-05" },
+    { 0xff000006, "draft-06" },
+    { 0xff000007, "draft-07" },
     { 0, NULL }
 };
 
@@ -152,7 +154,7 @@ static const value_string quic_long_packet_type_vals[] = {
 #define FT_PING             0x07
 #define FT_BLOCKED          0x08
 #define FT_STREAM_BLOCKED   0x09
-#define FT_STREAM_ID_NEEDED 0x0a
+#define FT_STREAM_ID_BLOCKED 0x0a
 #define FT_NEW_CONNECTION_ID 0x0b
 #define FT_STOP_SENDING     0x0c
 #define FT_ACK_MIN          0xa0
@@ -170,7 +172,7 @@ static const range_string quic_frame_type_vals[] = {
     { 0x07, 0x07,   "PING" },
     { 0x08, 0x08,   "BLOCKED" },
     { 0x09, 0x09,   "STREAM_BLOCKED" },
-    { 0x0a, 0x0a,   "STREAM_ID_NEEDED" },
+    { 0x0a, 0x0a,   "STREAM_ID_BLOCKED" },
     { 0x0b, 0x0b,   "NEW_CONNECTION_ID" },
     { 0x0c, 0x0c,   "STOP_SENDING" },
     { 0xa0, 0xbf,   "ACK" },
@@ -610,13 +612,13 @@ dissect_quic_frame_type(tvbuff_t *tvb, packet_info *pinfo _U_, proto_tree *quic_
 
             }
             break;
-            case FT_STREAM_ID_NEEDED:{
+            case FT_STREAM_ID_BLOCKED:{
 
                 /* No Payload */
 
                 proto_item_set_len(ti_ft, 1);
 
-                col_prepend_fstr(pinfo->cinfo, COL_INFO, "Stream ID Needed");
+                col_prepend_fstr(pinfo->cinfo, COL_INFO, "Stream ID Blocked");
             }
             break;
             case FT_NEW_CONNECTION_ID:{
@@ -677,7 +679,7 @@ dissect_quic_long_header(tvbuff_t *tvb, packet_info *pinfo, proto_tree *quic_tre
     proto_tree_add_item(quic_tree, hf_quic_version, tvb, offset, 4, ENC_BIG_ENDIAN);
     offset += 4;
 
-    col_append_fstr(pinfo->cinfo, COL_INFO, "%s, PKN: %u, CID: %" G_GINT64_MODIFIER "u", val_to_str(long_packet_type, quic_long_packet_type_vals, "Unknown Packet Type"), pkn, cid);
+    col_append_fstr(pinfo->cinfo, COL_INFO, "%s, PKN: %u, CID: 0x%" G_GINT64_MODIFIER "x", val_to_str(long_packet_type, quic_long_packet_type_vals, "Unknown Packet Type"), pkn, cid);
 
     /* Payload */
     /* Version Negociation (0x01)*/
@@ -800,7 +802,7 @@ proto_register_quic(void)
         },
         { &hf_quic_connection_id,
           { "Connection ID", "quic.connection_id",
-            FT_UINT64, BASE_DEC, NULL, 0x0,
+            FT_UINT64, BASE_HEX, NULL, 0x0,
             NULL, HFILL }
         },
         { &hf_quic_packet_number,

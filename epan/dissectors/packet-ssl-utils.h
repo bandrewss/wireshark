@@ -430,6 +430,8 @@ typedef struct _SslSession {
     guchar tls13_draft_version;
     gint8 client_cert_type;
     gint8 server_cert_type;
+    guint32 client_ccs_frame;
+    guint32 server_ccs_frame;
 
     /* The address/proto/port of the server as determined from heuristics
      * (e.g. ClientHello) or set externally (via ssl_set_master_secret()). */
@@ -567,6 +569,12 @@ ssl_find_appdata_dissector(const char *name);
 extern void
 ssl_data_set(StringInfo* buf, const guchar* src, guint len);
 
+/** alloc the data with the specified len for the stringInfo buffer.
+ @param src the data source
+ @param len the source data len */
+extern gint
+ssl_data_alloc(StringInfo* str, size_t len);
+
 extern gint
 ssl_cipher_setiv(SSL_CIPHER_CTX *cipher, guchar* iv, gint iv_len);
 
@@ -702,10 +710,6 @@ typedef struct ssl_common_dissect {
         gint hs_ext_alpn_list;
         gint hs_ext_alpn_str;
         gint hs_ext_alpn_str_len;
-        gint hs_ext_cert_status_request_extensions_len;
-        gint hs_ext_cert_status_request_len;
-        gint hs_ext_cert_status_responder_id_list_len;
-        gint hs_ext_cert_status_type;
         gint hs_ext_cert_url_item;
         gint hs_ext_cert_url_padding;
         gint hs_ext_cert_url_sha1;
@@ -713,6 +717,13 @@ typedef struct ssl_common_dissect {
         gint hs_ext_cert_url_url;
         gint hs_ext_cert_url_url_hash_list_len;
         gint hs_ext_cert_url_url_len;
+        gint hs_ext_cert_status_type;
+        gint hs_ext_cert_status_request_len;
+        gint hs_ext_cert_status_responder_id_list_len;
+        gint hs_ext_cert_status_request_extensions_len;
+        gint hs_ext_cert_status_request_list_len;
+        gint hs_ocsp_response_list_len;
+        gint hs_ocsp_response_len;
         gint hs_ext_cert_type;
         gint hs_ext_cert_types;
         gint hs_ext_cert_types_len;
@@ -884,6 +895,8 @@ typedef struct ssl_common_dissect {
         gint comp_methods;
         gint session_ticket;
         gint sct;
+        gint cert_status;
+        gint ocsp_response;
 
         /* do not forget to update SSL_COMMON_LIST_T and SSL_COMMON_ETT_LIST! */
     } ett;
@@ -1019,6 +1032,10 @@ ssl_dissect_hnd_finished(ssl_common_dissect_t *hf, tvbuff_t *tvb,
 extern void
 ssl_dissect_hnd_cert_url(ssl_common_dissect_t *hf, tvbuff_t *tvb, proto_tree *tree, guint32 offset);
 
+extern guint32
+tls_dissect_hnd_certificate_status(ssl_common_dissect_t *hf, tvbuff_t *tvb, packet_info *pinfo,
+                                   proto_tree *tree, guint32 offset, guint32 offset_end);
+
 extern void
 ssl_dissect_hnd_cli_keyex(ssl_common_dissect_t *hf, tvbuff_t *tvb,
                           proto_tree *tree, guint32 offset, guint32 length,
@@ -1037,6 +1054,11 @@ extern guint32
 tls_dissect_sct_list(ssl_common_dissect_t *hf, tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree,
                      guint32 offset, guint32 offset_end, guint16 version);
 
+extern gboolean
+tls13_hkdf_expand_label(guchar draft_version,
+                        int md, const StringInfo *secret, const char *label, const char *hash_value,
+                        guint16 out_len, guchar **out);
+
 /* {{{ */
 #define SSL_COMMON_LIST_T(name) \
 ssl_common_dissect_t name = {   \
@@ -1050,11 +1072,11 @@ ssl_common_dissect_t name = {   \
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, \
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, \
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, \
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,                         \
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,             \
     },                                                                  \
     /* ett */ {                                                         \
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, \
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,                         \
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,                 \
     },                                                                  \
     /* ei */ {                                                          \
         EI_INIT, EI_INIT, EI_INIT, EI_INIT, EI_INIT, EI_INIT,           \
@@ -1332,6 +1354,21 @@ ssl_common_dissect_t name = {   \
     { & name .hf.hs_ext_cert_status_request_extensions_len,             \
       { "Request Extensions Length", prefix ".handshake.extensions_status_request_exts_len",   \
         FT_UINT16, BASE_DEC, NULL, 0x0,                                 \
+        NULL, HFILL }                                                   \
+    },                                                                  \
+    { & name .hf.hs_ext_cert_status_request_list_len,                   \
+      { "Certificate Status List Length", prefix ".handshake.extensions_status_request_list_len", \
+        FT_UINT16, BASE_DEC, NULL, 0x0,                                 \
+        "CertificateStatusRequestItemV2 list length", HFILL }           \
+    },                                                                  \
+    { & name .hf.hs_ocsp_response_list_len,                             \
+      { "OCSP Response List Length", prefix ".handshake.ocsp_response_list_len", \
+        FT_UINT24, BASE_DEC, NULL, 0x0,                                 \
+        "OCSPResponseList length", HFILL }                              \
+    },                                                                  \
+    { & name .hf.hs_ocsp_response_len,                                  \
+      { "OCSP Response Length", prefix ".handshake.ocsp_response_len",  \
+        FT_UINT24, BASE_DEC, NULL, 0x0,                                 \
         NULL, HFILL }                                                   \
     },                                                                  \
     { & name .hf.hs_sig_hash_alg_len,                                   \
@@ -1866,6 +1903,8 @@ ssl_common_dissect_t name = {   \
         & name .ett.comp_methods,                   \
         & name .ett.session_ticket,                 \
         & name .ett.sct,                            \
+        & name .ett.cert_status,                    \
+        & name .ett.ocsp_response,                  \
 /* }}} */
 
 /* {{{ */

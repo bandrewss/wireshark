@@ -40,7 +40,7 @@
 
 #include "wsutil/file_util.h"
 #include "wsutil/str_util.h"
-#include "ws_version_info.h"
+#include "version_info.h"
 
 #include "ws_symbol_export.h"
 
@@ -950,6 +950,11 @@ bool FollowStreamDialog::follow(QString previous_filter, bool use_stream_index, 
 
     updateWidgets(false);
     endRetapPackets();
+
+    if (prefs.restore_filter_after_following_stream) {
+        emit updateFilter(previous_filter_, TRUE);
+    }
+
     return true;
 }
 

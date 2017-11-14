@@ -1,0 +1,32 @@
+# Makefile.am
+#
+# Wireshark - Network traffic analyzer
+# By Gerald Combs <gerald@wireshark.org>
+# Copyright 1998 Gerald Combs
+#
+# SPDX-License-Identifier: GPL-2.0+
+#
+
+WARNFLAGS = -Wall -Wextra
+
+plugindir := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) $(PKG_CONFIG) --define-variable=libdir=$(libdir) --variable plugindir wireshark)
+
+release_version := $(notdir $(plugindir))
+
+plugin_LTLIBRARIES = hello.la
+
+hello_la_SOURCES = hello.c
+
+hello_la_CPPFLAGS = -DVERSION_RELEASE=\"$(release_version)\"
+
+hello_la_CFLAGS = $(WIRESHARK_CFLAGS) -fvisibility=hidden $(WARNFLAGS)
+
+hello_la_LDFLAGS = -module -avoid-version -shared
+
+hello_la_LIBADD = $(WIRESHARK_LIBS)
+
+homedir = $${HOME}/.local/lib/wireshark/plugins/$(release_version)
+
+install-home:
+	$(MKDIR_P) $(homedir) || exit 1; \
+	$(INSTALL) $(builddir)/.libs/hello.so $(homedir)

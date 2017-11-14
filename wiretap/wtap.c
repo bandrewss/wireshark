@@ -51,10 +51,12 @@ static GSList *wtap_plugins = NULL;
 /*
  * Callback for each plugin found.
  */
+DIAG_OFF(pedantic)
 static gboolean
 check_for_wtap_plugin(GModule *handle)
 {
 	gpointer gp;
+	void (*register_wtap_module)(void);
 	wtap_plugin *plugin;
 
 	/*
@@ -67,15 +69,18 @@ check_for_wtap_plugin(GModule *handle)
 
 	/*
 	 * Yes - this plugin includes one or more wiretap modules.
+	 */
+	register_wtap_module = (void (*)(void))gp;
+
+	/*
 	 * Add this one to the list of wiretap module plugins.
 	 */
 	plugin = (wtap_plugin *)g_malloc(sizeof (wtap_plugin));
-DIAG_OFF(pedantic)
-	plugin->register_wtap_module = (void (*)(void))gp;
-DIAG_ON(pedantic)
-	wtap_plugins = g_slist_append(wtap_plugins, plugin);
+	plugin->register_wtap_module = register_wtap_module;
+	wtap_plugins = g_slist_prepend(wtap_plugins, plugin);
 	return TRUE;
 }
+DIAG_ON(pedantic)
 
 static void
 wtap_register_plugin_types(void)
@@ -1231,8 +1236,7 @@ wtap_close(wtap *wth)
 	if (wth->random_fh != NULL)
 		file_close(wth->random_fh);
 
-	if (wth->priv != NULL)
-		g_free(wth->priv);
+	g_free(wth->priv);
 
 	if (wth->fast_seek != NULL) {
 		g_ptr_array_foreach(wth->fast_seek, g_fast_seek_item_free, NULL);

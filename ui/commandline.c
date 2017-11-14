@@ -36,7 +36,7 @@
 #include "wsutil/wsgetopt.h"
 #endif
 
-#include <ws_version_info.h>
+#include <version_info.h>
 
 #include <wsutil/clopts_common.h>
 #include <wsutil/cmdarg_err.h>
@@ -613,14 +613,7 @@ void commandline_other_options(int argc, char *argv[], gboolean opt_reset)
                  * file - yes, you could have "-r" as the last part of the command,
                  * but that's a bit ugly.
                  */
-#ifndef HAVE_GTKOSXAPPLICATION
-                /*
-                 * For GTK+ Mac Integration, file name passed as free argument passed
-                 * through grag-and-drop and opened twice sometimes causing crashes.
-                 * Subject to report to GTK+ MAC.
-                 */
                 global_commandline_info.cf_name = g_strdup(argv[0]);
-#endif
             }
             argc--;
             argv++;

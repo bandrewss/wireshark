@@ -37,8 +37,8 @@
 #include <epan/wslua/init_wslua.h>
 #endif
 
-#include "../../log.h"
-#include "../../register.h"
+#include "log.h"
+#include "register.h"
 
 #include "ui/alert_box.h"
 #include "ui/last_open_dir.h"
@@ -51,7 +51,7 @@
 #include "wsutil/tempfile.h"
 #include "wsutil/plugins.h"
 #include "wsutil/copyright_info.h"
-#include "ws_version_info.h"
+#include "version_info.h"
 
 #ifdef HAVE_EXTCAP
 #include "extcap.h"

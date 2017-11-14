@@ -4,19 +4,7 @@
  * By Gerald Combs <gerald@wireshark.org>
  * Copyright 1998 Gerald Combs
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: GPL-2.0+
  */
 
 #include <config.h>
@@ -51,7 +39,7 @@
 #endif
 #include <wsutil/report_message.h>
 #include <wsutil/unicode-utils.h>
-#include <ws_version_info.h>
+#include <version_info.h>
 
 #include <epan/addr_resolv.h>
 #include <epan/ex-opt.h>
@@ -236,12 +224,14 @@ get_gui_compiled_info(GString *str)
     g_string_append(str, "without QtMultimedia");
 #endif
 
+#ifdef _WIN32
     g_string_append(str, ", ");
 #ifdef HAVE_AIRPCAP
     get_compiled_airpcap_version(str);
 #else
     g_string_append(str, "without AirPcap");
 #endif
+#endif /* _WIN32 */
 
     codec_get_compiled_version_info(str);
 }
@@ -939,6 +929,7 @@ int main(int argc, char *qt_argv[])
 
     ret_val = wsApp->exec();
 
+    delete main_w;
     recent_cleanup();
     epan_cleanup();
 

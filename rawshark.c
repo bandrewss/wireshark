@@ -9,19 +9,7 @@
  * Based on TShark, by Gilbert Ramirez <gram@alumni.rice.edu> and Guy Harris
  * <guy@alum.mit.edu>.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: GPL-2.0+
  */
 
 /*
@@ -99,7 +87,7 @@
 #include <wiretap/pcap-encap.h>
 
 #include <wsutil/clopts_common.h>
-#include <ws_version_info.h>
+#include <version_info.h>
 
 #include "caputils/capture-pcap-util.h"
 
@@ -205,7 +193,7 @@ print_usage(FILE *output)
     fprintf(output, "                           packet encapsulation or protocol\n");
     fprintf(output, "  -F <field>               field to display\n");
 #ifndef _WIN32
-    fprintf(output, "  -m                       virtual memory limit, in bytes \n");
+    fprintf(output, "  -m                       virtual memory limit, in bytes\n");
 #endif
     fprintf(output, "  -n                       disable all name resolution (def: all enabled)\n");
     fprintf(output, "  -N <name resolve flags>  enable specific name resolution(s): \"mnNtd\"\n");

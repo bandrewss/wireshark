@@ -20,6 +20,9 @@ libwireshark.so.0 libwireshark0 #MINVER#
  _try_val_to_str_ext_init@Base 1.9.1
  abs_time_secs_to_str@Base 1.99.0
  abs_time_to_str@Base 1.99.0
+ add_conversation_table_data@Base 2.5.0
+ add_conversation_table_data_with_conv_id@Base 2.5.0
+ add_hostlist_table_data@Base 2.5.0
  add_hosts_file@Base 1.9.1
  add_ip_name_from_string@Base 1.9.1
  add_ipv4_name@Base 1.9.1
@@ -93,9 +96,6 @@ libwireshark.so.0 libwireshark0 #MINVER#
  capture_dissector_get_count@Base 2.1.0
  capture_dissector_increment_count@Base 2.1.0
  chunk_type_values@Base 2.1.0
- circuit_add_proto_data@Base 1.9.1
- circuit_get_proto_data@Base 1.9.1
- circuit_new@Base 1.9.1
  col_add_fstr@Base 1.9.1
  col_add_lstr@Base 1.12.0~rc1
  col_add_str@Base 1.9.1
@@ -114,6 +114,7 @@ libwireshark.so.0 libwireshark0 #MINVER#
  col_fill_in@Base 1.9.1
  col_fill_in_error@Base 1.9.1
  col_fill_in_frame_data@Base 1.9.1
+ col_finalize@Base 2.5.0
  col_format_desc@Base 1.9.1
  col_format_to_string@Base 1.9.1
  col_get_text@Base 2.0.0
@@ -147,11 +148,22 @@ libwireshark.so.0 libwireshark0 #MINVER#
  column_dump_column_formats@Base 1.12.0~rc1
  conv_filter_list@Base 2.0.0
  conversation_add_proto_data@Base 1.9.1
+ conversation_create_endpoint@Base 2.5.0
+ conversation_create_endpoint_by_id@Base 2.5.0
  conversation_delete_proto_data@Base 1.9.1
  conversation_filter_from_packet@Base 2.2.8
  conversation_get_dissector@Base 2.0.0
+ conversation_get_endpoint_by_id@Base 2.5.0
+ conversation_get_html_hash@Base 2.5.0
  conversation_get_proto_data@Base 1.9.1
+ conversation_hash_exact@Base 2.5.0
+ conversation_key_addr1@Base 2.5.0
+ conversation_key_addr2@Base 2.5.0
+ conversation_key_port1@Base 2.5.0
+ conversation_key_port2@Base 2.5.0
  conversation_new@Base 1.9.1
+ conversation_new_by_id@Base 2.5.0
+ conversation_pt_to_endpoint_type@Base 2.5.0
  conversation_set_dissector@Base 1.9.1
  conversation_set_dissector_from_frame_number@Base 2.0.0
  conversation_table_get_num@Base 1.99.0
@@ -588,8 +600,9 @@ libwireshark.so.0 libwireshark0 #MINVER#
  filter_expression_new@Base 1.9.1
  find_and_mark_frame_depended_upon@Base 1.12.0~rc1
  find_capture_dissector@Base 2.3.0
- find_circuit@Base 1.9.1
  find_conversation@Base 1.9.1
+ find_conversation_by_id@Base 2.5.0
+ find_conversation_pinfo@Base 2.5.0
  find_conversation_filter@Base 2.0.0
  find_depend_dissector_list@Base 2.1.0
  find_dissector@Base 1.9.1
@@ -863,7 +876,6 @@ libwireshark.so.0 libwireshark0 #MINVER#
  ipopt_type_number_vals@Base 1.9.1
  ipproto_val_ext@Base 2.1.0
  ipprotostr@Base 1.9.1
- ipv4_get_net_order_addr@Base 1.9.1
  ipv6extprotostr@Base 2.1.0
  is_big_endian@Base 1.9.1
  is_broadcast_bssid@Base 2.0.0
@@ -1186,6 +1198,7 @@ libwireshark.so.0 libwireshark0 #MINVER#
  proto_tree_add_item_ret_string_and_length@Base 2.1.0
  proto_tree_add_item_ret_uint@Base 1.99.6
  proto_tree_add_item_ret_uint64@Base 2.3.0
+ proto_tree_add_item_ret_varint@Base 2.5.0
  proto_tree_add_none_format@Base 1.9.1
  proto_tree_add_protocol_format@Base 1.9.1
  proto_tree_add_split_bits_item_ret_val@Base 2.3.0
@@ -1219,6 +1232,10 @@ libwireshark.so.0 libwireshark0 #MINVER#
  protocols_module@Base 1.9.1
  ptvcursor_add@Base 1.9.1
  ptvcursor_add_no_advance@Base 1.9.1
+ ptvcursor_add_ret_boolean@Base 2.5.0
+ ptvcursor_add_ret_int@Base 2.5.0
+ ptvcursor_add_ret_string@Base 2.5.0
+ ptvcursor_add_ret_uint@Base 2.5.0
  ptvcursor_add_text_with_subtree@Base 1.9.1
  ptvcursor_add_with_subtree@Base 1.9.1
  ptvcursor_advance@Base 1.9.1
@@ -1273,6 +1290,7 @@ libwireshark.so.0 libwireshark0 #MINVER#
  register_capture_dissector_table@Base 2.1.0
  register_cleanup_routine@Base 1.99.8
  register_conversation_filter@Base 2.0.0
+ register_conversation_table@Base 2.5.0
  register_count@Base 1.9.1
  register_custom_dissector_table@Base 1.99.8
  register_custom_dissector_table@Base 1.99.8
@@ -1366,6 +1384,7 @@ libwireshark.so.0 libwireshark0 #MINVER#
  scsi_ssc_vals_ext@Base 1.12.0~rc1
  sctp_port_to_display@Base 1.99.2
  sequence_analysis_create_sai_with_addresses@Base 2.5.0
+ sequence_analysis_dump_to_file@Base 2.5.0
  sequence_analysis_find_by_name@Base 2.5.0
  sequence_analysis_free_nodes@Base 2.5.0
  sequence_analysis_get_name@Base 2.5.0
@@ -1667,6 +1686,7 @@ libwireshark.so.0 libwireshark0 #MINVER#
  tvb_get_stringz_enc@Base 1.9.1
  tvb_get_stringzpad@Base 1.12.0~rc1
  tvb_get_ts_23_038_7bits_string@Base 1.12.0~rc1
+ tvb_get_varint@Base 2.5.0
  tvb_memcpy@Base 1.9.1
  tvb_memdup@Base 1.9.1
  tvb_memeql@Base 1.9.1
@@ -1752,6 +1772,7 @@ libwireshark.so.0 libwireshark0 #MINVER#
  unit_name_string_get_value@Base 2.3.0
  unit_name_string_get_value64@Base 2.3.0
  unit_name_string_get_double@Base 2.3.0
+ units_amp@Base 2.5.0
  units_bit_bits@Base 2.3.0
  units_bit_sec@Base 2.3.0
  units_byte_bytes@Base 2.3.0
@@ -1804,6 +1825,8 @@ libwireshark.so.0 libwireshark0 #MINVER#
  units_segment_remaining@Base 2.3.0
  units_tick_ticks@Base 2.3.0
  units_volt@Base 2.3.0
+ units_watt@Base 2.5.0
+ units_watthour@Base 2.5.0
  units_week_weeks@Base 2.3.0
  units_word_words@Base 2.3.0
  unsigned_time_secs_to_str@Base 2.1.0

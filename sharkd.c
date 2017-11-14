@@ -6,19 +6,7 @@
  * By Gerald Combs <gerald@wireshark.org>
  * Copyright 1998 Gerald Combs
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: GPL-2.0+
  */
 
 #include <config.h>
@@ -43,7 +31,7 @@
 #include <wsutil/file_util.h>
 #include <wsutil/privileges.h>
 #include <wsutil/report_message.h>
-#include <ws_version_info.h>
+#include <version_info.h>
 #include <wiretap/wtap_opttypes.h>
 #include <wiretap/pcapng.h>
 
@@ -57,7 +45,7 @@
 #include <epan/print.h>
 #include <epan/addr_resolv.h>
 #include "ui/util.h"
-#include "ui/ui_util.h"
+#include "ui/ws_ui_util.h"
 #include "ui/decode_as_utils.h"
 #include "ui/filter_files.h"
 #include "ui/tap_export_pdu.h"
@@ -548,7 +536,7 @@ sharkd_load_cap_file(void)
 }
 
 int
-sharkd_dissect_request(unsigned int framenum, void (*cb)(packet_info *, proto_tree *, struct epan_column_info *, const GSList *, void *), int dissect_bytes, int dissect_columns, int dissect_tree, void *data)
+sharkd_dissect_request(unsigned int framenum, void (*cb)(epan_dissect_t *, proto_tree *, struct epan_column_info *, const GSList *, void *), int dissect_bytes, int dissect_columns, int dissect_tree, void *data)
 {
   frame_data *fdata;
   column_info *cinfo = (dissect_columns) ? &cfile.cinfo : NULL;
@@ -589,7 +577,7 @@ sharkd_dissect_request(unsigned int framenum, void (*cb)(packet_info *, proto_tr
     epan_dissect_fill_in_columns(&edt, FALSE, TRUE/* fill_fd_columns */);
   }
 
-  cb(&edt.pi, dissect_tree ? edt.tree : NULL, cinfo, dissect_bytes ? edt.pi.data_src : NULL, data);
+  cb(&edt, dissect_tree ? edt.tree : NULL, cinfo, dissect_bytes ? edt.pi.data_src : NULL, data);
 
   epan_dissect_cleanup(&edt);
   wtap_phdr_cleanup(&phdr);

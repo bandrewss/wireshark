@@ -90,25 +90,26 @@ enum ftenum {
 #define IS_FT_STRING(ft) ((ft)==FT_STRING||(ft)==FT_STRINGZ||(ft)==FT_STRINGZPAD)
 
 /* field types lengths */
-#define FT_ETHER_LEN        6
-#define FT_GUID_LEN         16
-#define FT_IPv4_LEN         4
-#define FT_IPv6_LEN         16
-#define FT_IPXNET_LEN       4
-#define FT_EUI64_LEN        8
-#define FT_AX25_ADDR_LEN    7
-#define FT_VINES_ADDR_LEN	  6
-#define FT_FCWWN_LEN        8
+#define FT_ETHER_LEN		6
+#define FT_GUID_LEN		16
+#define FT_IPv4_LEN		4
+#define FT_IPv6_LEN		16
+#define FT_IPXNET_LEN		4
+#define FT_EUI64_LEN		8
+#define FT_AX25_ADDR_LEN	7
+#define FT_VINES_ADDR_LEN	6
+#define FT_FCWWN_LEN		8
+#define FT_VARINT_MAX_LEN	10	/* Because 64 / 7 = 9 and 64 % 7 = 1, get an uint64 varint need reads up to 10 bytes. */
 
 typedef enum ftenum ftenum_t;
 
 enum ft_framenum_type {
-    FT_FRAMENUM_NONE,
-    FT_FRAMENUM_REQUEST,
-    FT_FRAMENUM_RESPONSE,
-    FT_FRAMENUM_ACK,
-    FT_FRAMENUM_DUP_ACK,
-    FT_FRAMENUM_NUM_TYPES /* last item number plus one */
+	FT_FRAMENUM_NONE,
+	FT_FRAMENUM_REQUEST,
+	FT_FRAMENUM_RESPONSE,
+	FT_FRAMENUM_ACK,
+	FT_FRAMENUM_DUP_ACK,
+	FT_FRAMENUM_NUM_TYPES /* last item number plus one */
 };
 
 typedef enum ft_framenum_type ft_framenum_type_t;

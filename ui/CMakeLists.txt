@@ -19,7 +19,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-
 set(COMMON_UI_SRC
 	alert_box.c
 	capture.c
@@ -55,7 +54,6 @@ set(COMMON_UI_SRC
 	tap-iax2-analysis.c
 	tap-rtp-common.c
 	tap-sctp-analysis.c
-	tap-sequence-analysis.c
 	tap-rlc-graph.c
 	tap-tcp-stream.c
 	text_import.c
@@ -93,9 +91,15 @@ add_library(ui STATIC
 	${GENERATED_FILES}
 )
 
-set_target_properties(ui PROPERTIES COMPILE_OPTIONS "${WS_WARNINGS_C_FLAGS}")
-set_target_properties(ui PROPERTIES LINK_FLAGS "${WS_LINK_FLAGS}")
-set_target_properties(ui PROPERTIES FOLDER "UI")
+set_target_properties(ui PROPERTIES
+	LINK_FLAGS "${WS_LINK_FLAGS}"
+	FOLDER "UI"
+)
+
+if (HTML_HELP_COMPILER)
+	add_definitions(-DHHC_DIR)
+	target_link_libraries(ui Htmlhelp.lib)
+endif()
 
 CHECKAPI(
 	NAME

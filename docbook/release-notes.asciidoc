@@ -13,10 +13,16 @@ used for troubleshooting, analysis, development and education.
 
 == What's New
 
+* Display filter buttons can now be edited / removed / disabled via a context
+  menu directly from the toolbar
+
+* Drag&Drop filter fields to the display filter toolbar or edit to create
+  a button on the fly or apply the filter as a display filter.
+
 * The installation step for Wireshark will now install headers required to
-  build plugins. A pkg-config file is provided to help with this. Only libwireshark
-  plugins supported for now, other types will be added in the future. Note you
-  must still rebuild all plugins between minor releases (X.Y).
+  build plugins. A pkg-config file is provided to help with this
+  (see doc/plugins.example for details). Note you must still rebuild all
+  plugins between minor releases (X.Y).
 
 //=== Bug Fixes
 
@@ -50,6 +56,9 @@ since version 2.4.0:
 * Improved NetMon .cap support with comments, event tracing, network filter,
   network info types and some Message Analyzer exported types.
 * Personal plugins folder on Linux/Unix is now ~/.local/lib/wireshark/plugins.
+* Add Flow Graph functionality to TShark using -z
+* Capinfos now prints SHA256 hashes in addition to RIPEMD160 and SHA1. MD5 output
+  has been removed.
 
 //=== Removed Dissectors
 
@@ -67,6 +76,15 @@ QUIC (IETF)
 Wi-Fi Device Provisioning Protocol
 PFCP (Packet Forwarding Control Protocol)
 Tibia
+Broadcom tags (Broadcom Ethernet switch management frames)
+GRPC (gRPC)
+SolarEdge monitoring protocol
+Protobuf (Protocol Buffers)
+FP Mux
+Network Functional Application Platform Interface (NFAPI) Protocol
+IEEE 1905.1a
+Bluetooth Mesh
+TWAMP and OWAMP
 --sort-and-group--
 
 === Updated Protocol Support

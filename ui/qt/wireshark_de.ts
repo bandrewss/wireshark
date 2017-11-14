@@ -611,15 +611,7 @@
     <name>ByteViewText</name>
     <message>
         <source>Show bytes as hexadecimal</source>
-        <translation>Bytes in Hexadezimal anzeigen</translation>
-    </message>
-    <message>
-        <source>Byte %1</source>
-        <translation>Bytes %1</translation>
-    </message>
-    <message>
-        <source>Bytes %1-%2</source>
-        <translation>Bytes %1-%2</translation>
+        <translation type="vanished">Bytes in Hexadezimal anzeigen</translation>
     </message>
 </context>
 <context>
@@ -1363,6 +1355,14 @@ Achtung: Eine Option MUSS ausgewählt sein.</translation>
         <translation>Hintergrund</translation>
     </message>
     <message>
+        <source>Set the display filter using this rule.</source>
+        <translation>Anzeigefilter nach dieser Regel setzen.</translation>
+    </message>
+    <message>
+        <source>Apply as filter</source>
+        <translation>Als Filter anwenden</translation>
+    </message>
+    <message>
         <source>Coloring Rules</source>
         <translation>Einfärbungsregeln</translation>
     </message>
@@ -1436,6 +1436,18 @@ Achtung: Eine Option MUSS ausgewählt sein.</translation>
         <source>Occurrence:</source>
         <oldsource>Occurrence</oldsource>
         <translation>Auftrittsreihenfolge:</translation>
+    </message>
+    <message>
+        <source>Missing fields.</source>
+        <translation>Fehlende Felder.</translation>
+    </message>
+    <message>
+        <source>Invalid fields.</source>
+        <translation>Ungültige Felder.</translation>
+    </message>
+    <message>
+        <source>Invalid occurrence value.</source>
+        <translation>Ungültiger Wert.</translation>
     </message>
 </context>
 <context>
@@ -1517,42 +1529,6 @@ Achtung: Eine Option MUSS ausgewählt sein.</translation>
 <context>
     <name>DecodeAsDialog</name>
     <message>
-        <source>Field</source>
-        <translation type="vanished">Feld</translation>
-    </message>
-    <message>
-        <source>Match using this field</source>
-        <translation type="vanished">Übereinstimmend mit diesem Feld</translation>
-    </message>
-    <message>
-        <source>Value</source>
-        <translation type="vanished">Wert</translation>
-    </message>
-    <message>
-        <source>Current &quot;Decode As&quot; behavior</source>
-        <translation type="vanished">Aktuelles &quot;Dekodieren als&quot;-Verhalten</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation type="vanished">Typ</translation>
-    </message>
-    <message>
-        <source>Default</source>
-        <translation type="vanished">Standard</translation>
-    </message>
-    <message>
-        <source>Default &quot;Decode As&quot; behavior</source>
-        <translation type="vanished">Standard &quot;Dekodieren als&quot;-Verhalten</translation>
-    </message>
-    <message>
-        <source>Current</source>
-        <translation type="vanished">Aktuell</translation>
-    </message>
-    <message>
-        <source>Change behavior when the protocol field matches this value</source>
-        <translation type="vanished">Wenn dieser Wert auf das Protokollfeld zutrifft, soll das Verhalten geändert werden</translation>
-    </message>
-    <message>
         <source>Change the dissection behavior for a protocol.</source>
         <translation>Dissektionsverhalten für ein Protokoll ändern.</translation>
     </message>
@@ -1567,18 +1543,6 @@ Achtung: Eine Option MUSS ausgewählt sein.</translation>
     <message>
         <source>Decode As</source>
         <translation>Dekodieren als</translation>
-    </message>
-    <message>
-        <source>String</source>
-        <translation type="vanished">Zeichenkette</translation>
-    </message>
-    <message>
-        <source>Integer, base </source>
-        <translation type="vanished">Integer, base</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation type="vanished">unbekannt</translation>
     </message>
 </context>
 <context>
@@ -2166,6 +2130,18 @@ Achtung: Eine Option MUSS ausgewählt sein.</translation>
     <message>
         <source>Enter a comment for the filter button</source>
         <translation>Kommenter für den Filterknopf eingeben</translation>
+    </message>
+    <message>
+        <source>Missing label.</source>
+        <translation>Fehlende Beschriftung.</translation>
+    </message>
+    <message>
+        <source>Missing filter expression.</source>
+        <translation>Fehlender Filterausdruck.</translation>
+    </message>
+    <message>
+        <source>Invalid filter expression.</source>
+        <translation>Ungültiger Filterausdruck.</translation>
     </message>
 </context>
 <context>
@@ -4388,254 +4364,19 @@ Achtung: Eine Option MUSS ausgewählt sein.</translation>
 </context>
 <context>
     <name>LBMUIMFlowDialog</name>
-    <message>
-        <source>LBM UIM Flows</source>
-        <translation>LBM UIM Flows</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
-
-&lt;h3&gt;Valuable and amazing time-saving keyboard shortcuts&lt;/h3&gt;
-&lt;table&gt;&lt;tbody&gt;
-
-&lt;tr&gt;&lt;th&gt;0&lt;/th&gt;&lt;td&gt;Reset graph to its initial state&lt;/td&gt;&lt;/th&gt;
-
-&lt;tr&gt;&lt;th&gt;→&lt;/th&gt;&lt;td&gt;Move right 10 pixels&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;←&lt;/th&gt;&lt;td&gt;Move left 10 pixels&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;↑&lt;/th&gt;&lt;td&gt;Move up 10 pixels&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;↓&lt;/th&gt;&lt;td&gt;Move down 10 pixels&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Shift+&lt;/i&gt;→&lt;/th&gt;&lt;td&gt;Move right 1 pixel&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Shift+&lt;/i&gt;←&lt;/th&gt;&lt;td&gt;Move left 1 pixel&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Shift+&lt;/i&gt;↑&lt;/th&gt;&lt;td&gt;Move up 1 pixel&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Shift+&lt;/i&gt;↓&lt;/th&gt;&lt;td&gt;Move down 1 pixel&lt;/td&gt;&lt;/th&gt;
-
-&lt;tr&gt;&lt;th&gt;g&lt;/th&gt;&lt;td&gt;Go to packet under cursor&lt;/td&gt;&lt;/th&gt;
-
-&lt;/tbody&gt;&lt;/table&gt;
-&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
-
-&lt;h3&gt;Nützliche Tastenkürzel zur Zeitersparnis&lt;/h3&gt;
-&lt;table&gt;&lt;tbody&gt;
-
-&lt;tr&gt;&lt;th&gt;0&lt;/th&gt;&lt;td&gt;Graph in Ursprungszustand zurücksetzen&lt;/td&gt;&lt;/th&gt;
-
-&lt;tr&gt;&lt;th&gt;→&lt;/th&gt;&lt;td&gt;10 Bildpunkte nach rechts&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;←&lt;/th&gt;&lt;td&gt;10 Bildpunkte nach links&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;↑&lt;/th&gt;&lt;td&gt;10 Bildpunkte nach oben&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;↓&lt;/th&gt;&lt;td&gt;10 Bildpunkte nach unten&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Umschalttaste+&lt;/i&gt;→&lt;/th&gt;&lt;td&gt;1 Bildpunkt nach rechts&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Umschalttaste+&lt;/i&gt;←&lt;/th&gt;&lt;td&gt;1 Bildpunkt nach links&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Umschalttaste+&lt;/i&gt;↑&lt;/th&gt;&lt;td&gt;1 Bildpunkt nach oben&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Umschalttaste+&lt;/i&gt;↓&lt;/th&gt;&lt;td&gt;1 Bildpunkt nach unten&lt;/td&gt;&lt;/th&gt;
-
-&lt;tr&gt;&lt;th&gt;g&lt;/th&gt;&lt;td&gt;Zum Paket gehen, bei dem sich der Zeiger gerade befindet&lt;/td&gt;&lt;/th&gt;
-
-&lt;/tbody&gt;&lt;/table&gt;
-&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>&lt;small&gt;&lt;i&gt;A hint&lt;/i&gt;&lt;/small&gt;</source>
-        <translation>&lt;small&gt;&lt;i&gt;Hinweis&lt;/i&gt;&lt;/small&gt;</translation>
-    </message>
-    <message>
-        <source>Show:</source>
-        <translation>Anzeigen:</translation>
-    </message>
-    <message>
-        <source>All packets</source>
-        <translation>Alle Pakete</translation>
-    </message>
-    <message>
-        <source>Displayed packets</source>
-        <translation>Angezeigte Pakete</translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation>Zurücksetzen</translation>
-    </message>
-    <message>
-        <source>Reset Diagram</source>
-        <translation>Diagramm zurücksetzen</translation>
-    </message>
-    <message>
-        <source>Reset the diagram to its initial state.</source>
-        <translation>Diagramm in Ursprungszustand zurücksetzen.</translation>
-    </message>
-    <message>
-        <source>0</source>
-        <translation>0</translation>
-    </message>
-    <message>
-        <source>Move Up 10 Pixels</source>
-        <translation>Um 10 Bildpunkte nach oben verschieben</translation>
-    </message>
-    <message>
-        <source>Move up 10 pixels</source>
-        <translation>Um 10 Bildpunkte nach oben verschieben</translation>
-    </message>
-    <message>
-        <source>Up</source>
-        <translation>Rauf</translation>
-    </message>
-    <message>
-        <source>Move Left 10 Pixels</source>
-        <translation>Um 10 Bildpunkte nach links verschieben</translation>
-    </message>
-    <message>
-        <source>Move left 10 pixels</source>
-        <translation>Um 10 Bildpunkte nach links verschieben</translation>
-    </message>
-    <message>
-        <source>Left</source>
-        <translation>Links</translation>
-    </message>
-    <message>
-        <source>Move Right 10 Pixels</source>
-        <translation>Um 10 Bildpunkte nach rechts verschieben</translation>
-    </message>
-    <message>
-        <source>Move right 10 pixels</source>
-        <translation>Um 10 Bildpunkte nach rechts verschieben</translation>
-    </message>
-    <message>
-        <source>Right</source>
-        <translation>Rechts</translation>
-    </message>
-    <message>
-        <source>Move Down 10 Pixels</source>
-        <translation>Um 10 Bildpunkte nach unten verschieben</translation>
-    </message>
-    <message>
-        <source>Move down 10 pixels</source>
-        <translation>Um 10 Bildpunkte nach unten verschieben</translation>
-    </message>
-    <message>
-        <source>Down</source>
-        <translation>Runter</translation>
-    </message>
-    <message>
-        <source>Move Up 1 Pixel</source>
-        <translation>Um 1 Bildpunkt nach oben verschieben</translation>
-    </message>
-    <message>
-        <source>Move up 1 pixel</source>
-        <translation>Um 1 Bildpunkt nach oben verschieben</translation>
-    </message>
-    <message>
-        <source>Shift+Up</source>
-        <translation>Shift+Up</translation>
-    </message>
-    <message>
-        <source>Move Left 1 Pixel</source>
-        <translation>Um 1 Bildpunkt nach links verschieben</translation>
-    </message>
-    <message>
-        <source>Move left 1 pixel</source>
-        <translation>Um 1 Bildpunkt nach links verschieben</translation>
-    </message>
-    <message>
-        <source>Shift+Left</source>
-        <translation>Shift+Left</translation>
-    </message>
-    <message>
-        <source>Move Right 1 Pixel</source>
-        <translation>Um 1 Bildpunkt nach rechts verschieben</translation>
-    </message>
-    <message>
-        <source>Move right 1 pixel</source>
-        <translation>Um 1 Bildpunkt nach rechts verschieben</translation>
-    </message>
-    <message>
-        <source>Shift+Right</source>
-        <translation>Shift+Right</translation>
-    </message>
-    <message>
-        <source>Move Down 1 Pixel</source>
-        <translation>Um 1 Bildpunkt nach unten verschieben</translation>
-    </message>
-    <message>
-        <source>Move down 1 pixel</source>
-        <translation>Um 1 Bildpunkt nach unten verschieben</translation>
-    </message>
-    <message>
-        <source>Shift+Down</source>
-        <translation>Shift+Down</translation>
-    </message>
-    <message>
-        <source>Go To Packet Under Cursor</source>
-        <translation>Zum Paket gehen, auf das der Mauszeiger gerade zeigt</translation>
-    </message>
-    <message>
-        <source>Go to packet currently under the cursor</source>
-        <translation>Zum Paket gehen, auf das der Mauszeiger gerade zeigt</translation>
-    </message>
-    <message>
-        <source>G</source>
-        <translation>G</translation>
-    </message>
-    <message>
-        <source>All Flows</source>
-        <translation>Alle Flows</translation>
-    </message>
-    <message>
-        <source>Show flows for all packets</source>
-        <translation>Flows für alle Pakete anzeigen</translation>
-    </message>
-    <message>
-        <source>1</source>
-        <translation>1</translation>
-    </message>
-    <message>
-        <source>TCP Flows</source>
-        <translation>TCP Flows</translation>
-    </message>
-    <message>
-        <source>Show only TCP flow information</source>
-        <translation>Nur TCP Flow Informationen anzeigen</translation>
-    </message>
-    <message>
-        <source>Save As</source>
-        <oldsource>Save As...</oldsource>
-        <translation>Speichern als</translation>
-    </message>
     <message numerus="yes">
         <source>%Ln node(s)</source>
-        <translation>
-            <numerusform>%Ln Node</numerusform>
-            <numerusform>%Ln Nodes</numerusform>
+        <translation type="obsolete">
+            <numerusform>%Ln node</numerusform>
+            <numerusform>%Ln nodes</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%Ln item(s)</source>
-        <translation>
-            <numerusform>%Ln Element</numerusform>
-            <numerusform>%Ln Elemente</numerusform>
+        <translation type="obsolete">
+            <numerusform>%Ln item</numerusform>
+            <numerusform>%Ln items</numerusform>
         </translation>
-    </message>
-    <message>
-        <source>Portable Document Format (*.pdf)</source>
-        <translation>Portable Document Format (*.pdf)</translation>
-    </message>
-    <message>
-        <source>Portable Network Graphics (*.png)</source>
-        <translation>Portable Network Graphics (*.png)</translation>
-    </message>
-    <message>
-        <source>Windows Bitmap (*.bmp)</source>
-        <translation>Windows Bitmap (*.bmp)</translation>
-    </message>
-    <message>
-        <source>JPEG File Interchange Format (*.jpeg *.jpg)</source>
-        <translation>JPEG File Interchange Format (*.jpeg *.jpg)</translation>
-    </message>
-    <message>
-        <source>ASCII (*.txt)</source>
-        <translation>ASCII (*.txt)</translation>
-    </message>
-    <message>
-        <source>Save Graph As</source>
-        <translation>Graph speichern als</translation>
     </message>
 </context>
 <context>
@@ -5138,6 +4879,22 @@ Achtung: Eine Option MUSS ausgewählt sein.</translation>
         <source>No expert information</source>
         <oldsource>No expert info</oldsource>
         <translation>Keine Experten-Informationen</translation>
+    </message>
+    <message>
+        <source>, 1 byte</source>
+        <translation type="unfinished">, 1 Byte</translation>
+    </message>
+    <message>
+        <source>, %1 bytes</source>
+        <translation type="unfinished">, %1 Bytes</translation>
+    </message>
+    <message>
+        <source>Byte %1</source>
+        <translation type="unfinished">Byte %1</translation>
+    </message>
+    <message>
+        <source>Bytes %1-%2</source>
+        <translation type="unfinished">Bytes %1-%2</translation>
     </message>
     <message>
         <source>Profile: </source>
@@ -6360,10 +6117,6 @@ text-decoration: underline;
         <translation>Streams</translation>
     </message>
     <message>
-        <source>Stream Flow Graph</source>
-        <translation>Stream Flow Graph</translation>
-    </message>
-    <message>
         <source>LBT-RM</source>
         <translation>LBT-RM</translation>
     </message>
@@ -7341,6 +7094,14 @@ text-decoration: underline;
         <translation>Dateien zusammenfügen</translation>
     </message>
     <message>
+        <source>Byte %1</source>
+        <translation type="vanished">Byte %1</translation>
+    </message>
+    <message>
+        <source>Bytes %1-%2</source>
+        <translation type="vanished">Bytes %1-%2</translation>
+    </message>
+    <message>
         <source>SSL Session Keys (*.keys *.txt);;All Files (</source>
         <translation>SSL Sitzungsschlüssel (*.keys *.txt);; Alle Dateien (</translation>
     </message>
@@ -7799,7 +7560,11 @@ text-decoration: underline;
     <name>PacketCommentDialog</name>
     <message>
         <source>Packet Comment</source>
-        <translation>Paketkommentar</translation>
+        <translation type="vanished">Paketkommentar</translation>
+    </message>
+    <message>
+        <source>Packet %1 Comment</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -7819,6 +7584,14 @@ text-decoration: underline;
     <message>
         <source>[%1 closed] </source>
         <translation>[%1 geschlossen] </translation>
+    </message>
+    <message>
+        <source>Byte %1</source>
+        <translation>Byte %1</translation>
+    </message>
+    <message>
+        <source>Bytes %1-%2</source>
+        <translation>Bytes %1-%2</translation>
     </message>
 </context>
 <context>
@@ -7995,6 +7768,10 @@ text-decoration: underline;
     <message>
         <source>Open %1 preferences</source>
         <translation>%1 Einstellungen öffnen</translation>
+    </message>
+    <message>
+        <source>Invalid value.</source>
+        <translation>Ungültiger Wert.</translation>
     </message>
 </context>
 <context>
@@ -8191,11 +7968,11 @@ text-decoration: underline;
     </message>
     <message>
         <source>, 1 byte</source>
-        <translation>, 1 Byte</translation>
+        <translation type="vanished">, 1 Byte</translation>
     </message>
     <message>
         <source>, %1 bytes</source>
-        <translation>, %1 Bytes</translation>
+        <translation type="vanished">, %1 Bytes</translation>
     </message>
 </context>
 <context>
@@ -10829,16 +10606,12 @@ text-decoration: underline;
         <translation>&lt;small&gt;&lt;i&gt;Hinweis&lt;/i&gt;&lt;/small&gt;</translation>
     </message>
     <message>
-        <source>Show:</source>
-        <translation>Anzeigen:</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only show flows matching the current display filter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Nur Flows anzeigen, die dem aktuellen Anzeigenfilter entsprechen&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <source>All packets</source>
-        <translation>Alle Pakete</translation>
-    </message>
-    <message>
-        <source>Displayed packets</source>
-        <translation>Angezeigte Pakete</translation>
+        <source>Limit to display filter</source>
+        <translation>Auf Anzeigefilter einschränken</translation>
     </message>
     <message>
         <source>Flow type:</source>
@@ -11437,6 +11210,14 @@ text-decoration: underline;
         <translation>Zoomen</translation>
     </message>
     <message>
+        <source>Display Round Trip Time vs Sequence Number</source>
+        <translation>Zeige Round-Trip-Zeit zur Sequenznummer an</translation>
+    </message>
+    <message>
+        <source>RTT By Sequence Number</source>
+        <translation>RTT pro Sequenznummer</translation>
+    </message>
+    <message>
         <source>Display graph of Segment Length vs Time</source>
         <translation>Graph Segmentlänge zu Zeit anzeigen</translation>
     </message>
@@ -12030,6 +11811,10 @@ text-decoration: underline;
         <translation>Diesen Eintrag kopieren.</translation>
     </message>
     <message>
+        <source>Clear all entries.</source>
+        <translation>Alle Einträge löschen.</translation>
+    </message>
+    <message>
         <source>Unknown User Accessible Table</source>
         <translation>Unbekannte User Accessible Table </translation>
     </message>
@@ -12055,6 +11840,10 @@ text-decoration: underline;
     <message>
         <source>Copy this entry.</source>
         <translation>Diesen Eintrag kopieren.</translation>
+    </message>
+    <message>
+        <source>Clear all entries.</source>
+        <translation>Alle Einträge löschen.</translation>
     </message>
     <message>
         <source>Unknown User Accessible Table</source>

@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Ref: 3GPP TS 25.331 V14.3.0 (2017-06)
+ * Ref: 3GPP TS 25.331 V14.4.0 (2017-09)
  */
 
 /**
@@ -286,6 +286,8 @@ static gint ett_rrc_eutraFeatureGroupIndicators = -1;
 static gint ett_rrc_cn_CommonGSM_MAP_NAS_SysInfo = -1;
 static gint ett_rrc_ims_info = -1;
 static gint ett_rrc_cellIdentity = -1;
+static gint ett_rrc_cipheringAlgorithmCap = -1;
+static gint ett_rrc_integrityProtectionAlgorithmCap = -1;
 
 static expert_field ei_rrc_no_hrnti = EI_INIT;
 
@@ -539,6 +541,8 @@ void proto_register_rrc(void) {
     &ett_rrc_cn_CommonGSM_MAP_NAS_SysInfo,
     &ett_rrc_ims_info,
     &ett_rrc_cellIdentity,
+    &ett_rrc_cipheringAlgorithmCap,
+    &ett_rrc_integrityProtectionAlgorithmCap,
   };
 
   static ei_register_info ei[] = {

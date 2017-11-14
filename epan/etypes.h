@@ -324,6 +324,10 @@ extern "C" {
 #define ETHERTYPE_JUMBO_LLC		0x8870	/* 802.2 jumbo frames http://tools.ietf.org/html/draft-ietf-isis-ext-eth */
 #endif
 
+#ifndef ETHERTYPE_BRCM_TYPE
+#define ETHERTYPE_BRCM_TYPE		0x8874	/* Broadcom Ethernet switches management tag */
+#endif
+
 #ifndef ETHERTYPE_HOMEPLUG
 #define ETHERTYPE_HOMEPLUG		0x887B	/* IEEE assigned Ethertype */
 #endif
@@ -563,6 +567,10 @@ extern "C" {
 
 #ifndef ETHERTYPE_HSR
 #define ETHERTYPE_HSR			0x892F	/* High-availability Seamless Redundancy (IEC62439 Part 3) */
+#endif
+
+#ifndef ETHERTYPE_IEEE_1905
+#define ETHERTYPE_IEEE_1905		0x893A  /* IEEE 1905 */
 #endif
 
 #ifndef ETHERTYPE_IEEE_802_1BR

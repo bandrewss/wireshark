@@ -124,7 +124,6 @@
 #include <epan/addr_resolv.h>
 #include <epan/expert.h>
 #include <epan/uat.h>
-#include <epan/oui.h>
 #include <epan/strutil.h>
 #include <wsutil/str_util.h>
 #include <wsutil/strtoi.h>
@@ -1487,11 +1486,7 @@ static void* uat_bootp_record_copy_cb(void* n, const void* o, size_t siz _U_) {
 	uat_bootp_record_t* new_record = (uat_bootp_record_t *)n;
 	const uat_bootp_record_t* old_record = (const uat_bootp_record_t *)o;
 
-	if (old_record->text) {
-		new_record->text = g_strdup(old_record->text);
-	} else {
-		new_record->text = NULL;
-	}
+	new_record->text = g_strdup(old_record->text);
 
 	return new_record;
 }
@@ -1509,7 +1504,7 @@ static gboolean uat_bootp_record_update_cb(void* r, char** err) {
 static void uat_bootp_record_free_cb(void*r) {
 	uat_bootp_record_t* rec = (uat_bootp_record_t *)r;
 
-	if (rec->text) g_free(rec->text);
+	g_free(rec->text);
 }
 
 UAT_DEC_CB_DEF(uat_bootp_records, opt, uat_bootp_record_t)
@@ -2705,9 +2700,9 @@ dissect_bootpopt_sip_servers(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree
 					/* RFC 3396 is not used, so we can easily link the fqdn with v_tree. */
 					proto_tree_add_item(tree, hf_bootp_option_sip_server_address, rfc3396_sip_server.tvb_composite, composite_offset, 4, ENC_BIG_ENDIAN);
 				} else {
-					guint32 sip_server = tvb_get_ntohl(rfc3396_sip_server.tvb_composite, composite_offset);
+					guint32 sip_server = tvb_get_ipv4(rfc3396_sip_server.tvb_composite, composite_offset);
 					/* RFC 3396 is used, so the option is split into several option 120. We don't link fqdn with v_tree. */
-					proto_tree_add_uint(tree, hf_bootp_option_sip_server_address, tvb, 0, 0, sip_server);
+					proto_tree_add_ipv4(tree, hf_bootp_option_sip_server_address, tvb, 0, 0, sip_server);
 				}
 				composite_offset += 4;
 			}
@@ -8524,7 +8519,7 @@ proto_register_bootp(void)
 
 		{ &hf_bootp_option125_tr111_device_manufacturer_oui,
 		  { "DeviceManufacturerOUI", "bootp.option.vi.tr111.device_manufacturer_oui",
-		    FT_UINT24, BASE_HEX, VALS(oui_vals), 0x0,
+		    FT_UINT24, BASE_OUI, NULL, 0x0,
 		    "Option 125:TR 111 1 DeviceManufacturerOUI", HFILL }},
 
 		{ &hf_bootp_option125_tr111_device_serial_number,

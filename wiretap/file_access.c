@@ -523,8 +523,7 @@ wtap_deregister_open_info(const gchar *name)
 
 	for (i = 0; i < open_info_arr->len; i++) {
 		if (open_routines[i].name && strcmp(open_routines[i].name, name) == 0) {
-			if (open_routines[i].extensions_set != NULL)
-				g_strfreev(open_routines[i].extensions_set);
+			g_strfreev(open_routines[i].extensions_set);
 			open_info_arr = g_array_remove_index(open_info_arr, i);
 			set_heuristic_routine();
 			return;
@@ -1241,7 +1240,7 @@ static const struct file_type_subtype_info dump_open_table_base[] = {
 	  libpcap_dump_can_write_encap, libpcap_dump_open, NULL },
 
 	/* WTAP_FILE_TYPE_SUBTYPE_PCAP_NOKIA */
-	{ "Nokia tcpdump - pcap ", "nokiapcap", "pcap", "cap;dmp",
+	{ "Nokia tcpdump - pcap", "nokiapcap", "pcap", "cap;dmp",
 	  FALSE, FALSE, 0,
 	  libpcap_dump_can_write_encap, libpcap_dump_open, NULL },
 
@@ -2590,8 +2589,7 @@ wtap_dump_close(wtap_dumper *wdh, int *err)
 		}
 		ret = FALSE;
 	}
-	if (wdh->priv != NULL)
-		g_free(wdh->priv);
+	g_free(wdh->priv);
 	wtap_block_array_free(wdh->interface_data);
 	g_free(wdh);
 	return ret;

@@ -5,6 +5,7 @@
  *
  * Guy Harris <guy@alum.mit.edu>
  *
+ * Copyright 2017, Eugene Adell <eugene.adell@gmail.com>
  * Copyright 2004, Jerry Talkington <jtalkington@users.sourceforge.net>
  * Copyright 2002, Tim Potter <tpot@samba.org>
  * Copyright 1999, Andrew Tridgell <tridge@samba.org>
@@ -81,7 +82,8 @@ static int hf_http_request_full_uri = -1;
 static int hf_http_request_path = -1;
 static int hf_http_request_query = -1;
 static int hf_http_request_query_parameter = -1;
-static int hf_http_version = -1;
+static int hf_http_request_version = -1;
+static int hf_http_response_version = -1;
 static int hf_http_response_code = -1;
 static int hf_http_response_code_desc = -1;
 static int hf_http_response_phrase = -1;
@@ -209,17 +211,8 @@ header_fields_copy_cb(void* n, const void* o, size_t siz _U_)
 	header_field_t* new_rec = (header_field_t*)n;
 	const header_field_t* old_rec = (const header_field_t*)o;
 
-	if (old_rec->header_name) {
-		new_rec->header_name = g_strdup(old_rec->header_name);
-	} else {
-		new_rec->header_name = NULL;
-	}
-
-	if (old_rec->header_desc) {
-		new_rec->header_desc = g_strdup(old_rec->header_desc);
-	} else {
-		new_rec->header_desc = NULL;
-	}
+	new_rec->header_name = g_strdup(old_rec->header_name);
+	new_rec->header_desc = g_strdup(old_rec->header_desc);
 
 	return new_rec;
 }
@@ -229,10 +222,8 @@ header_fields_free_cb(void*r)
 {
 	header_field_t* rec = (header_field_t*)r;
 
-	if (rec->header_name)
-		g_free(rec->header_name);
-	if (rec->header_desc)
-		g_free(rec->header_desc);
+	g_free(rec->header_name);
+	g_free(rec->header_desc);
 }
 
 UAT_CSTRING_CB_DEF(header_fields, header_name, header_field_t)
@@ -337,7 +328,7 @@ static void process_header(tvbuff_t *tvb, int offset, int next_offset,
 			   const guchar *line, int linelen, int colon_offset,
 			   packet_info *pinfo, proto_tree *tree,
 			   headers_t *eh_ptr, http_conv_t *conv_data,
-			   int http_type);
+			   http_type_t http_type);
 static gint find_header_hf_value(tvbuff_t *tvb, int offset, guint header_len);
 static gboolean check_auth_ntlmssp(proto_item *hdr_item, tvbuff_t *tvb,
 				   packet_info *pinfo, gchar *value);
@@ -395,6 +386,7 @@ const value_string vals_http_status_code[] = {
 	{ 100, "Continue" },
 	{ 101, "Switching Protocols" },
 	{ 102, "Processing" },                     /* RFC 2518 */
+	{ 103, "Early Hints" },                    /* RFC-ietf-httpbis-early-hints-05 */
 	{ 199, "Informational - Others" },
 
 	{ 200, "OK"},
@@ -1548,9 +1540,9 @@ dissect_http_message(tvbuff_t *tvb, int offset, packet_info *pinfo,
 		if(have_tap_listener(http_follow_tap)) {
 			tap_queue_packet(http_follow_tap, pinfo, next_tvb);
 		}
-		file_data = tvb_get_string_enc(wmem_packet_scope(), next_tvb, 0, tvb_reported_length(next_tvb), ENC_ASCII);
+		file_data = tvb_get_string_enc(wmem_packet_scope(), next_tvb, 0, tvb_captured_length(next_tvb), ENC_ASCII);
 		proto_tree_add_string_format_value(http_tree, hf_http_file_data,
-			next_tvb, 0, tvb_reported_length(next_tvb), file_data, "%u bytes", tvb_reported_length(next_tvb));
+			next_tvb, 0, tvb_captured_length(next_tvb), file_data, "%u bytes", tvb_captured_length(next_tvb));
 
 		/*
 		 * Do subdissector checks.
@@ -1730,7 +1722,7 @@ basic_request_dissector(tvbuff_t *tvb, proto_tree *tree, int offset,
 
 	/* Everything to the end of the line is the version. */
 	tokenlen = (int) (lineend - line);
-	proto_tree_add_item(tree, hf_http_version, tvb, offset, tokenlen,
+	proto_tree_add_item(tree, hf_http_request_version, tvb, offset, tokenlen,
 	    ENC_ASCII|ENC_NA);
 }
 
@@ -1750,7 +1742,7 @@ basic_response_dissector(tvbuff_t *tvb, proto_tree *tree, int offset,
 	tokenlen = get_token_len(line, lineend, &next_token);
 	if (tokenlen == 0)
 		return;
-	proto_tree_add_item(tree, hf_http_version, tvb, offset, tokenlen,
+	proto_tree_add_item(tree, hf_http_response_version, tvb, offset, tokenlen,
 			    ENC_ASCII|ENC_NA);
 	/* Advance to the start of the next token. */
 	offset += (int) (next_token - line);
@@ -2202,7 +2194,7 @@ http_payload_subdissector(tvbuff_t *tvb, proto_tree *tree,
 			destport = pinfo->destport;
 		}
 
-		conv = find_conversation(pinfo->num, &pinfo->src, &pinfo->dst, PT_TCP, srcport, destport, 0);
+		conv = find_conversation(pinfo->num, &pinfo->src, &pinfo->dst, ENDPOINT_TCP, srcport, destport, 0);
 
 		/* We may get stuck in a recursion loop if we let process_tcp_payload() call us.
 		 * So, if the port in the URI is one we're registered for or we have set up a
@@ -2267,7 +2259,8 @@ is_http_request_or_reply(const gchar *data, int linelen, http_type_t *type,
 	 * From draft-ietf-dasl-protocol-00.txt, a now vanished Microsoft draft:
 	 *	SEARCH
 	 */
-	if (linelen >= 5 && strncmp(data, "HTTP/", 5) == 0) {
+	if ((linelen >= 5 && strncmp(data, "HTTP/", 5) == 0) ||
+		(linelen >= 3 && strncmp(data, "ICY", 3) == 0)) {
 		*type = HTTP_RESPONSE;
 		isHttpRequestOrReply = TRUE;	/* response */
 		if (reqresp_dissector)
@@ -2293,10 +2286,6 @@ is_http_request_or_reply(const gchar *data, int linelen, http_type_t *type,
 			if (strncmp(data, "GET", indx) == 0 ||
 			    strncmp(data, "PUT", indx) == 0) {
 				*type = HTTP_REQUEST;
-				isHttpRequestOrReply = TRUE;
-			}
-			else if (strncmp(data, "ICY", indx) == 0) {
-				*type = HTTP_RESPONSE;
 				isHttpRequestOrReply = TRUE;
 			}
 			break;
@@ -2627,7 +2616,7 @@ static void
 process_header(tvbuff_t *tvb, int offset, int next_offset,
 	       const guchar *line, int linelen, int colon_offset,
 	       packet_info *pinfo, proto_tree *tree, headers_t *eh_ptr,
-	       http_conv_t *conv_data, int http_type)
+	       http_conv_t *conv_data, http_type_t http_type)
 {
 	int len;
 	int line_end_offset;
@@ -3060,7 +3049,7 @@ check_auth_citrixbasic(proto_item *hdr_item, tvbuff_t *tvb, gchar *value, int of
 					    hf_http_citrix, tvb, 0, 0, 1);
 			PROTO_ITEM_SET_HIDDEN(hidden_item);
 
-		        if(strncmp(value, "username=\"", 10) == 0) {
+			if(strncmp(value, "username=\"", 10) == 0) {
 				value += 10;
 				offset += 10;
 				ch_ptr = strchr(value, '"');
@@ -3075,7 +3064,7 @@ check_auth_citrixbasic(proto_item *hdr_item, tvbuff_t *tvb, gchar *value, int of
 					offset += data_len;
 				}
 			}
-		        if(strncmp(value, "; domain=\"", 10) == 0) {
+			if(strncmp(value, "; domain=\"", 10) == 0) {
 				value += 10;
 				offset += 10;
 				ch_ptr = strchr(value, '"');
@@ -3090,7 +3079,7 @@ check_auth_citrixbasic(proto_item *hdr_item, tvbuff_t *tvb, gchar *value, int of
 					offset += data_len;
 				}
 			}
-		        if(strncmp(value, "; password=\"", 12) == 0) {
+			if(strncmp(value, "; password=\"", 12) == 0) {
 				value += 12;
 				offset += 12;
 				ch_ptr = strchr(value, '"');
@@ -3105,7 +3094,7 @@ check_auth_citrixbasic(proto_item *hdr_item, tvbuff_t *tvb, gchar *value, int of
 					offset += data_len;
 				}
 			}
-		        if(strncmp(value, "; AGESessionId=\"", 16) == 0) {
+			if(strncmp(value, "; AGESessionId=\"", 16) == 0) {
 				value += 16;
 				offset += 16;
 				ch_ptr = strchr(value, '"');
@@ -3406,10 +3395,14 @@ proto_register_http(void)
 	      { "Request URI Query Parameter",	"http.request.uri.query.parameter",
 		FT_STRING, STR_UNICODE, NULL, 0x0,
 		"HTTP Request-URI Query Parameter", HFILL }},
-	    { &hf_http_version,
+	    { &hf_http_request_version,
 	      { "Request Version",	"http.request.version",
 		FT_STRING, BASE_NONE, NULL, 0x0,
 		"HTTP Request HTTP-Version", HFILL }},
+	    { &hf_http_response_version,
+	      { "Response Version",	"http.response.version",
+		FT_STRING, BASE_NONE, NULL, 0x0,
+		"HTTP Response HTTP-Version", HFILL }},
 	    { &hf_http_request_full_uri,
 	      { "Full request URI",	"http.request.full_uri",
 		FT_STRING, BASE_NONE, NULL, 0x0,

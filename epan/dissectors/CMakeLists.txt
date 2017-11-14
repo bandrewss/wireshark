@@ -196,7 +196,6 @@ add_library(dissectors-corba OBJECT
 set_target_properties(dissectors-corba PROPERTIES
 	FOLDER "Libs/epan/dissectors"
 	COMPILE_DEFINITIONS "WS_BUILD_DLL"
-	COMPILE_OPTIONS "${WS_WARNINGS_C_FLAGS}"
 )
 
 if(WIN32 AND "${CMAKE_GENERATOR}" STREQUAL "Visual Studio 12 2013 Win64")
@@ -679,6 +678,7 @@ set(DISSECTOR_SRC
 	packet-bootparams.c
 	packet-bpdu.c
 	packet-bpq.c
+	packet-brcm-tag.c
 	packet-brdwlk.c
 	packet-brp.c
 	packet-bssap.c
@@ -705,6 +705,7 @@ set(DISSECTOR_SRC
 	packet-btl2cap.c
 	packet-btle.c
 	packet-btle_rf.c
+	packet-btmesh.c
 	packet-btmcap.c
 	packet-btrfcomm.c
 	packet-btsap.c
@@ -958,6 +959,7 @@ set(DISSECTOR_SRC
 	packet-forces.c
 	packet-foundry.c
 	packet-fp_hint.c
+	packet-fp_mux.c
 	packet-fr.c
 	packet-fractalgeneratorprotocol.c
 	packet-frame.c
@@ -993,6 +995,7 @@ set(DISSECTOR_SRC
 	packet-gprs-llc.c
 	packet-gprscdr.c
 	packet-gre.c
+	packet-grpc.c
 	packet-gsm_a_bssmap.c
 	packet-gsm_a_common.c
 	packet-gsm_a_dtap.c
@@ -1084,6 +1087,7 @@ set(DISSECTOR_SRC
 	packet-iec104.c
 	packet-ieee1722.c
 	packet-ieee17221.c
+	packet-ieee1905.c
 	packet-ieee80211-netmon.c
 	packet-ieee80211-prism.c
 	packet-ieee80211-radio.c
@@ -1377,6 +1381,7 @@ set(DISSECTOR_SRC
 	packet-nvme-rdma.c
 	packet-nwmtp.c
 	packet-nwp.c
+	packet-nfapi.c
 	packet-oampdu.c
 	packet-obd-ii.c
 	packet-obex.c
@@ -1448,6 +1453,7 @@ set(DISSECTOR_SRC
 	packet-ppp.c
 	packet-pppoe.c
 	packet-pptp.c
+	packet-protobuf.c
 	packet-prp.c
 	packet-ptp.c
 	packet-ptpip.c
@@ -1599,6 +1605,7 @@ set(DISSECTOR_SRC
 	packet-snort.c
 	packet-socketcan.c
 	packet-socks.c
+	packet-solaredge.c
 	packet-soupbintcp.c
 	packet-spdy.c
 	packet-spice.c
@@ -1667,6 +1674,7 @@ set(DISSECTOR_SRC
 	packet-turbocell.c
 	packet-turnchannel.c
 	packet-tuxedo.c
+	packet-twamp.c
 	packet-tzsp.c
 	packet-u3v.c
 	packet-ua.c
@@ -1740,6 +1748,7 @@ set(DISSECTOR_SRC
 	packet-wifi-p2p.c
 	packet-windows-common.c
 	packet-winsrepl.c
+	packet-wisun.c
 	packet-wlccp.c
 	packet-wol.c
 	packet-wow.c
@@ -1853,7 +1862,6 @@ add_library(dissectors OBJECT
 set_target_properties(dissectors PROPERTIES
 	FOLDER "Libs/epan/dissectors"
 	COMPILE_DEFINITIONS "WS_BUILD_DLL"
-	COMPILE_OPTIONS "${WS_WARNINGS_C_FLAGS}"
 )
 
 if(NOT WIN32)

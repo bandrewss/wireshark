@@ -31,7 +31,7 @@
 
 #include <caputils/ws80211_utils.h>
 
-#include <ui/ui_util.h>
+#include "ui/ws_ui_util.h"
 #include <wsutil/utf8_entities.h>
 #include <wsutil/frequency-utils.h>
 
@@ -85,6 +85,7 @@ WirelessFrame::WirelessFrame(QWidget *parent) :
 
 WirelessFrame::~WirelessFrame()
 {
+    ws80211_free_interfaces(interfaces_);
     delete ui;
 }
 

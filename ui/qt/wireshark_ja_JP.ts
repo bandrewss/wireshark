@@ -108,7 +108,7 @@
     </message>
     <message>
         <source>Copy Rows</source>
-        <translation>列をコピー</translation>
+        <translation>行をコピー</translation>
     </message>
     <message>
         <source>Copy All</source>
@@ -247,15 +247,15 @@
     </message>
     <message>
         <source>Copy Cell</source>
-        <translation type="unfinished">セルをコピー</translation>
+        <translation>セルをコピー</translation>
     </message>
     <message>
         <source>Copy Rows</source>
-        <translation type="unfinished">列をコピー</translation>
+        <translation>行をコピー</translation>
     </message>
     <message>
         <source>Copy All</source>
-        <translation type="unfinished">すべてをコピー</translation>
+        <translation>すべてをコピー</translation>
     </message>
     <message>
         <source>Save as image</source>
@@ -362,7 +362,7 @@
     </message>
     <message>
         <source>Copy Rows</source>
-        <translation>列をコピー</translation>
+        <translation>行をコピー</translation>
     </message>
     <message>
         <source>Copy All</source>
@@ -553,7 +553,7 @@
     </message>
     <message>
         <source>Copy Rows</source>
-        <translation>列をコピー</translation>
+        <translation>行をコピー</translation>
     </message>
     <message>
         <source>Copy All</source>
@@ -611,15 +611,7 @@
     <name>ByteViewText</name>
     <message>
         <source>Show bytes as hexadecimal</source>
-        <translation>16進数でバイト列を表示</translation>
-    </message>
-    <message>
-        <source>Byte %1</source>
-        <translation>バイト %1</translation>
-    </message>
-    <message>
-        <source>Bytes %1-%2</source>
-        <translation>バイト %1-%2</translation>
+        <translation type="vanished">16進数でバイト列を表示</translation>
     </message>
 </context>
 <context>
@@ -1358,6 +1350,14 @@ PLEASE NOTE: One option MUST be selected.</source>
         <translation>背景色</translation>
     </message>
     <message>
+        <source>Set the display filter using this rule.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Apply as filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Coloring Rules</source>
         <translation>色付けルール</translation>
     </message>
@@ -1431,6 +1431,18 @@ PLEASE NOTE: One option MUST be selected.</source>
         <source>Occurrence:</source>
         <oldsource>Occurrence</oldsource>
         <translation>出現位置:</translation>
+    </message>
+    <message>
+        <source>Missing fields.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid fields.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid occurrence value.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1512,42 +1524,6 @@ PLEASE NOTE: One option MUST be selected.</source>
 <context>
     <name>DecodeAsDialog</name>
     <message>
-        <source>Field</source>
-        <translation type="vanished">フィールド</translation>
-    </message>
-    <message>
-        <source>Match using this field</source>
-        <translation type="vanished">このフィールドを利用して照合します</translation>
-    </message>
-    <message>
-        <source>Value</source>
-        <translation type="vanished">値</translation>
-    </message>
-    <message>
-        <source>Current &quot;Decode As&quot; behavior</source>
-        <translation type="vanished">現在の &quot;としてデコード&quot; の振る舞い</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation type="vanished">種別</translation>
-    </message>
-    <message>
-        <source>Default</source>
-        <translation type="vanished">デフォルト</translation>
-    </message>
-    <message>
-        <source>Default &quot;Decode As&quot; behavior</source>
-        <translation type="vanished">デフォルトの &quot;としてデコード &quot; の振る舞い</translation>
-    </message>
-    <message>
-        <source>Current</source>
-        <translation type="vanished">現在</translation>
-    </message>
-    <message>
-        <source>Change behavior when the protocol field matches this value</source>
-        <translation type="vanished">プロトコルフィールドがこの値に一致した際の振る舞いを変更します</translation>
-    </message>
-    <message>
         <source>Change the dissection behavior for a protocol.</source>
         <translation>プロトコルに対するダイセクターの振る舞いを変更します</translation>
     </message>
@@ -1562,18 +1538,6 @@ PLEASE NOTE: One option MUST be selected.</source>
     <message>
         <source>Decode As</source>
         <translation>としてデコード</translation>
-    </message>
-    <message>
-        <source>String</source>
-        <translation type="vanished">文字列</translation>
-    </message>
-    <message>
-        <source>Integer, base </source>
-        <translation type="vanished">整数型, 基数</translation>
-    </message>
-    <message>
-        <source>unknown</source>
-        <translation type="vanished">不明</translation>
     </message>
 </context>
 <context>
@@ -2159,6 +2123,18 @@ PLEASE NOTE: One option MUST be selected.</source>
         <source>Enter a comment for the filter button</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Missing label.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Missing filter expression.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid filter expression.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>FirewallRulesDialog</name>
@@ -2180,7 +2156,7 @@ PLEASE NOTE: One option MUST be selected.</source>
     </message>
     <message>
         <source>Copy</source>
-        <translation type="unfinished">コピー</translation>
+        <translation>コピー</translation>
     </message>
     <message>
         <source>IPv4 source address.</source>
@@ -4373,252 +4349,17 @@ PLEASE NOTE: One option MUST be selected.</source>
 </context>
 <context>
     <name>LBMUIMFlowDialog</name>
-    <message>
-        <source>LBM UIM Flows</source>
-        <translation>LBM UIMフロー</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;
-
-&lt;h3&gt;Valuable and amazing time-saving keyboard shortcuts&lt;/h3&gt;
-&lt;table&gt;&lt;tbody&gt;
-
-&lt;tr&gt;&lt;th&gt;0&lt;/th&gt;&lt;td&gt;Reset graph to its initial state&lt;/td&gt;&lt;/th&gt;
-
-&lt;tr&gt;&lt;th&gt;→&lt;/th&gt;&lt;td&gt;Move right 10 pixels&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;←&lt;/th&gt;&lt;td&gt;Move left 10 pixels&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;↑&lt;/th&gt;&lt;td&gt;Move up 10 pixels&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;↓&lt;/th&gt;&lt;td&gt;Move down 10 pixels&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Shift+&lt;/i&gt;→&lt;/th&gt;&lt;td&gt;Move right 1 pixel&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Shift+&lt;/i&gt;←&lt;/th&gt;&lt;td&gt;Move left 1 pixel&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Shift+&lt;/i&gt;↑&lt;/th&gt;&lt;td&gt;Move up 1 pixel&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Shift+&lt;/i&gt;↓&lt;/th&gt;&lt;td&gt;Move down 1 pixel&lt;/td&gt;&lt;/th&gt;
-
-&lt;tr&gt;&lt;th&gt;g&lt;/th&gt;&lt;td&gt;Go to packet under cursor&lt;/td&gt;&lt;/th&gt;
-
-&lt;/tbody&gt;&lt;/table&gt;
-&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>lt;html&gt;&lt;head/&gt;&lt;body&gt;
-
-&lt;h3&gt;価値あるじかんを節約できる素晴らしいキーボードショートカット&lt;/h3&gt;
-&lt;table&gt;&lt;tbody&gt;
-
-&lt;tr&gt;&lt;th&gt;0&lt;/th&gt;&lt;td&gt;グラフを初期状態にリセット&lt;/td&gt;&lt;/th&gt;
-
-&lt;tr&gt;&lt;th&gt;→&lt;/th&gt;&lt;td&gt;右に10ピクセル移動&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;←&lt;/th&gt;&lt;td&gt;左に10ピクセル移動&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;↑&lt;/th&gt;&lt;td&gt;上に10ピクセル移動&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;↓&lt;/th&gt;&lt;td&gt;下に10ピクセル移動s&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Shift+&lt;/i&gt;→&lt;/th&gt;&lt;td&gt;右に1ピクセル移動&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Shift+&lt;/i&gt;←&lt;/th&gt;&lt;td&gt;左に1ピクセル移動&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Shift+&lt;/i&gt;↑&lt;/th&gt;&lt;td&gt;上に1ピクセル移動&lt;/td&gt;&lt;/th&gt;
-&lt;tr&gt;&lt;th&gt;&lt;i&gt;Shift+&lt;/i&gt;↓&lt;/th&gt;&lt;td&gt;下に1ピクセル移動&lt;/td&gt;&lt;/th&gt;
-
-&lt;tr&gt;&lt;th&gt;g&lt;/th&gt;&lt;td&gt;カーソルのあるパケットに移動&lt;/td&gt;&lt;/th&gt;
-
-&lt;/tbody&gt;&lt;/table&gt;
-&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>&lt;small&gt;&lt;i&gt;A hint&lt;/i&gt;&lt;/small&gt;</source>
-        <translation>&lt;small&gt;&lt;i&gt;ヒント&lt;/i&gt;&lt;/small&gt;</translation>
-    </message>
-    <message>
-        <source>Show:</source>
-        <translation>表示:</translation>
-    </message>
-    <message>
-        <source>All packets</source>
-        <translation>全てのパケット</translation>
-    </message>
-    <message>
-        <source>Displayed packets</source>
-        <translation>表示されたパケット</translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation>リセット</translation>
-    </message>
-    <message>
-        <source>Reset Diagram</source>
-        <translation>ダイアグラムをリセット</translation>
-    </message>
-    <message>
-        <source>Reset the diagram to its initial state.</source>
-        <translation>ダイアグラムを初期状態にリセット</translation>
-    </message>
-    <message>
-        <source>0</source>
-        <translation>0</translation>
-    </message>
-    <message>
-        <source>Move Up 10 Pixels</source>
-        <translation>上に10ピクセル移動</translation>
-    </message>
-    <message>
-        <source>Move up 10 pixels</source>
-        <translation>上に10ピクセル移動します</translation>
-    </message>
-    <message>
-        <source>Up</source>
-        <translation>上</translation>
-    </message>
-    <message>
-        <source>Move Left 10 Pixels</source>
-        <translation>左に10ピクセル移動</translation>
-    </message>
-    <message>
-        <source>Move left 10 pixels</source>
-        <translation>左に10ピクセル移動します</translation>
-    </message>
-    <message>
-        <source>Left</source>
-        <translation>左</translation>
-    </message>
-    <message>
-        <source>Move Right 10 Pixels</source>
-        <translation>右に10ピクセル移動</translation>
-    </message>
-    <message>
-        <source>Move right 10 pixels</source>
-        <translation>右に10ピクセル移動します</translation>
-    </message>
-    <message>
-        <source>Right</source>
-        <translation>右</translation>
-    </message>
-    <message>
-        <source>Move Down 10 Pixels</source>
-        <translation>下に10ピクセル移動</translation>
-    </message>
-    <message>
-        <source>Move down 10 pixels</source>
-        <translation>下に10ピクセル移動します</translation>
-    </message>
-    <message>
-        <source>Down</source>
-        <translation>下</translation>
-    </message>
-    <message>
-        <source>Move Up 1 Pixel</source>
-        <translation>上に1ピクセル移動</translation>
-    </message>
-    <message>
-        <source>Move up 1 pixel</source>
-        <translation>上に1ピクセル移動します</translation>
-    </message>
-    <message>
-        <source>Shift+Up</source>
-        <translation>Shift+Up</translation>
-    </message>
-    <message>
-        <source>Move Left 1 Pixel</source>
-        <translation>左に1ピクセル移動</translation>
-    </message>
-    <message>
-        <source>Move left 1 pixel</source>
-        <translation>左に1ピクセル移動します</translation>
-    </message>
-    <message>
-        <source>Shift+Left</source>
-        <translation>Shift+Left</translation>
-    </message>
-    <message>
-        <source>Move Right 1 Pixel</source>
-        <translation>右に1ピクセル移動</translation>
-    </message>
-    <message>
-        <source>Move right 1 pixel</source>
-        <translation>右に1ピクセル移動します</translation>
-    </message>
-    <message>
-        <source>Shift+Right</source>
-        <translation>Shift+Right</translation>
-    </message>
-    <message>
-        <source>Move Down 1 Pixel</source>
-        <translation>下に1ピクセル移動</translation>
-    </message>
-    <message>
-        <source>Move down 1 pixel</source>
-        <translation>下に1ピクセル移動します</translation>
-    </message>
-    <message>
-        <source>Shift+Down</source>
-        <translation>Shift+Down</translation>
-    </message>
-    <message>
-        <source>Go To Packet Under Cursor</source>
-        <translation>カーソル位置のパケットに移動します</translation>
-    </message>
-    <message>
-        <source>Go to packet currently under the cursor</source>
-        <translation>現在のカーソル位置にあるパケットに移動</translation>
-    </message>
-    <message>
-        <source>G</source>
-        <translation>G</translation>
-    </message>
-    <message>
-        <source>All Flows</source>
-        <translation>すべてのフロー</translation>
-    </message>
-    <message>
-        <source>Show flows for all packets</source>
-        <translation>すべてのパケットのフローを表示</translation>
-    </message>
-    <message>
-        <source>1</source>
-        <translation>1</translation>
-    </message>
-    <message>
-        <source>TCP Flows</source>
-        <translation>TCPフロー</translation>
-    </message>
-    <message>
-        <source>Show only TCP flow information</source>
-        <translation>TCPフロー情報のみ表示</translation>
-    </message>
-    <message>
-        <source>Save As</source>
-        <oldsource>Save As...</oldsource>
-        <translation>として保存</translation>
-    </message>
     <message numerus="yes">
         <source>%Ln node(s)</source>
-        <translation>
-            <numerusform>%Ln ノード</numerusform>
+        <translation type="obsolete">
+            <numerusform>%Ln node</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%Ln item(s)</source>
-        <translation>
-            <numerusform>%Ln 項目</numerusform>
+        <translation type="obsolete">
+            <numerusform>%Ln item</numerusform>
         </translation>
-    </message>
-    <message>
-        <source>Portable Document Format (*.pdf)</source>
-        <translation>PDF形式 (*.pdf)</translation>
-    </message>
-    <message>
-        <source>Portable Network Graphics (*.png)</source>
-        <translation>PNG形式 (*.png)</translation>
-    </message>
-    <message>
-        <source>Windows Bitmap (*.bmp)</source>
-        <translation>Windowsビットマップ形式 (*.bmp)</translation>
-    </message>
-    <message>
-        <source>JPEG File Interchange Format (*.jpeg *.jpg)</source>
-        <translation>JPEG形式 (*.jpeg *.jpg)</translation>
-    </message>
-    <message>
-        <source>ASCII (*.txt)</source>
-        <translation>ASCIIテキスト形式 (*.txt)</translation>
-    </message>
-    <message>
-        <source>Save Graph As</source>
-        <translation>としてグラフを保存</translation>
     </message>
 </context>
 <context>
@@ -5125,6 +4866,22 @@ PLEASE NOTE: One option MUST be selected.</source>
         <source>No expert information</source>
         <oldsource>No expert info</oldsource>
         <translation>エキスパート情報はありません</translation>
+    </message>
+    <message>
+        <source>, 1 byte</source>
+        <translation type="unfinished">, 1 バイト</translation>
+    </message>
+    <message>
+        <source>, %1 bytes</source>
+        <translation type="unfinished">, %1 バイト</translation>
+    </message>
+    <message>
+        <source>Byte %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bytes %1-%2</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Profile: </source>
@@ -6314,10 +6071,6 @@ a:hover {
     <message>
         <source>Streams</source>
         <translation>ストリーム</translation>
-    </message>
-    <message>
-        <source>Stream Flow Graph</source>
-        <translation>ストリームフローグラフ</translation>
     </message>
     <message>
         <source>LBT-RM</source>
@@ -7754,7 +7507,11 @@ a:hover {
     <name>PacketCommentDialog</name>
     <message>
         <source>Packet Comment</source>
-        <translation>パケットコメント</translation>
+        <translation type="vanished">パケットコメント</translation>
+    </message>
+    <message>
+        <source>Packet %1 Comment</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -7774,6 +7531,14 @@ a:hover {
     <message>
         <source>[%1 closed] </source>
         <translation>[%1 を綴じました] </translation>
+    </message>
+    <message>
+        <source>Byte %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bytes %1-%2</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -7950,6 +7715,10 @@ a:hover {
     <message>
         <source>Open %1 preferences</source>
         <translation>%1 設定を開く</translation>
+    </message>
+    <message>
+        <source>Invalid value.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -8146,11 +7915,11 @@ a:hover {
     </message>
     <message>
         <source>, 1 byte</source>
-        <translation>, 1 バイト</translation>
+        <translation type="vanished">, 1 バイト</translation>
     </message>
     <message>
         <source>, %1 bytes</source>
-        <translation>, %1 バイト</translation>
+        <translation type="vanished">, %1 バイト</translation>
     </message>
 </context>
 <context>
@@ -8267,7 +8036,7 @@ a:hover {
     <name>QObject</name>
     <message>
         <source>Default</source>
-        <translation type="unfinished">デフォルト</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Changed</source>
@@ -10759,16 +10528,12 @@ a:hover {
         <translation>&lt;small&gt;&lt;i&gt;ヒント&lt;/i&gt;&lt;/small&gt;</translation>
     </message>
     <message>
-        <source>Show:</source>
-        <translation>表示:</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only show flows matching the current display filter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>All packets</source>
-        <translation>すべてのパケット</translation>
-    </message>
-    <message>
-        <source>Displayed packets</source>
-        <translation>表示されたパケット</translation>
+        <source>Limit to display filter</source>
+        <translation type="unfinished">表示フィルタに制限</translation>
     </message>
     <message>
         <source>Flow type:</source>
@@ -11365,6 +11130,14 @@ a:hover {
         <translation>ズーム</translation>
     </message>
     <message>
+        <source>Display Round Trip Time vs Sequence Number</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RTT By Sequence Number</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Display graph of Segment Length vs Time</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11958,6 +11731,10 @@ a:hover {
         <translation>このエントリをコピーします</translation>
     </message>
     <message>
+        <source>Clear all entries.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Unknown User Accessible Table</source>
         <translation>ユーザがアクセスできる表が不明</translation>
     </message>
@@ -11983,6 +11760,10 @@ a:hover {
     <message>
         <source>Copy this entry.</source>
         <translation type="unfinished">このエントリをコピーします</translation>
+    </message>
+    <message>
+        <source>Clear all entries.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Unknown User Accessible Table</source>

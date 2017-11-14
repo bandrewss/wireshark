@@ -23,25 +23,22 @@
 include $(top_srcdir)/Makefile.am.inc
 
 AM_CPPFLAGS = $(INCLUDEDIRS) $(WS_CPPFLAGS) -DDOC_DIR=\"$(docdir)\" \
-	$(GLIB_CFLAGS) $(LIBGCRYPT_CFLAGS) $(LIBGNUTLS_CFLAGS) $(PORTAUDIO_INCLUDES)
+	$(GLIB_CFLAGS) $(PCAP_CFLAGS) $(LIBGCRYPT_CFLAGS) $(LIBGNUTLS_CFLAGS) $(PORTAUDIO_INCLUDES)
 
-noinst_LIBRARIES = libui.a libui_dirty.a
+noinst_LIBRARIES = libui.a libui_generated.a
 
 # Generated header files that we want in the distribution.
 GENERATED_HEADER_FILES = \
 	text_import_scanner_lex.h
 
 # Generated C source files that we want in the distribution.
-GENERATED_C_FILES =
-
-DIRTY_GENERATED_C_FILES = \
+GENERATED_C_FILES = \
 	text_import_scanner.c
 
 # All the generated files we want in the distribution.
 GENERATED_FILES = \
 	$(GENERATED_HEADER_FILES) \
-	$(GENERATED_C_FILES) \
-	$(DIRTY_GENERATED_C_FILES)
+	$(GENERATED_C_FILES)
 
 # Files that generate compileable files
 GENERATOR_FILES = \
@@ -83,7 +80,6 @@ WIRESHARK_UI_SRC = \
 	tap-rlc-graph.c		\
 	tap-rtp-common.c	\
 	tap-sctp-analysis.c	\
-	tap-sequence-analysis.c	\
 	tap-tcp-stream.c	\
 	text_import.c		\
 	time_shift.c		\
@@ -136,27 +132,23 @@ WIRESHARK_UI_INCLUDES = \
 	tap-rtp-analysis.h	\
 	tap-rtp-common.h	\
 	tap-sctp-analysis.h	\
-	tap-sequence-analysis.h	\
 	tap-tcp-stream.h	\
 	text_import.h		\
 	text_import_scanner.h	\
 	time_shift.h		\
 	traffic_table_ui.h	\
-	ui_util.h		\
+	ws_ui_util.h		\
 	util.h			\
 	voip_calls.h
 
 # All sources that should be put in the source distribution tarball
 libui_a_SOURCES = \
 	$(WIRESHARK_UI_SRC) \
-	$(WIRESHARK_UI_INCLUDES) \
-	$(GENERATED_HEADER_FILES) \
-	$(GENERATED_C_FILES)
+	$(WIRESHARK_UI_INCLUDES)
 
-libui_dirty_a_SOURCES = \
-	$(DIRTY_GENERATED_C_FILES)
+libui_generated_a_SOURCES = $(GENERATED_FILES)
 
-libui_dirty_a_CFLAGS = $(GENERATED_CFLAGS)
+libui_generated_a_CFLAGS = $(GENERATED_CFLAGS)
 
 EXTRA_DIST = \
 	.editorconfig			\
@@ -178,12 +170,11 @@ libui_a_CFLAGS = $(AM_CFLAGS) $(PIE_CFLAGS)
 CLEANFILES = \
 	doxygen-ui.tag	\
 	libui.a		\
-	libui_dirty.a	\
+	libui_generated.a	\
 	*~
 
 MAINTAINERCLEANFILES = \
-	$(GENERATED_FILES)	\
-	Makefile.in
+	$(GENERATED_FILES)
 
 text_import_scanner_lex.h: text_import_scanner.c
 

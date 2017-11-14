@@ -96,6 +96,7 @@
 #include <QThread>
 #include <QUrl>
 #include <QColorDialog>
+#include <qmath.h>
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -864,6 +865,7 @@ WiresharkApplication::WiresharkApplication(int &argc,  char **argv) :
 
 WiresharkApplication::~WiresharkApplication()
 {
+    clearDynamicMenuGroupItems();
     free_filter_lists();
 }
 
@@ -968,6 +970,13 @@ void WiresharkApplication::removeDynamicMenuGroupItem(int group, QAction *sg_act
     }
     removed_menu_groups_[group] << sg_action;
     dynamic_menu_groups_[group].removeAll(sg_action);
+}
+
+void WiresharkApplication::clearDynamicMenuGroupItems()
+{
+    foreach (int group, dynamic_menu_groups_.uniqueKeys()) {
+        dynamic_menu_groups_[group].clear();
+    }
 }
 
 QList<QAction *> WiresharkApplication::dynamicMenuGroupItems(int group)
@@ -1253,6 +1262,19 @@ void WiresharkApplication::doTriggerMenuItem(MainMenuItem menuItem)
         emit openCaptureOptions();
         break;
     }
+}
+
+void WiresharkApplication::zoomTextFont(int zoomLevel)
+{
+    // Scale by 10%, rounding to nearest half point, minimum 1 point.
+    // XXX Small sizes repeat. It might just be easier to create a map of multipliers.
+    QFont zoomed_font_ = mono_font_;
+    qreal zoom_size = mono_font_.pointSize() * 2 * qPow(qreal(1.1), zoomLevel);
+    zoom_size = qRound(zoom_size) / qreal(2.0);
+    zoom_size = qMax(zoom_size, qreal(1.0));
+    zoomed_font_.setPointSizeF(zoom_size);
+
+    emit zoomMonospaceFont(zoomed_font_);
 }
 
 #ifdef HAVE_SOFTWARE_UPDATE

@@ -12,19 +12,7 @@
  * By Gerald Combs <gerald@wireshark.org>
  * Copyright 1998 Gerald Combs
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: GPL-2.0+
  */
 
 #include <config.h>
@@ -66,9 +54,7 @@
 #ifdef _WIN32
 #include <wsutil/unicode-utils.h>
 #include <process.h>    /* getpid */
-#ifdef HAVE_WINSOCK2_H
 #include <winsock2.h>
-#endif
 #endif
 
 #ifndef HAVE_STRPTIME
@@ -86,7 +72,7 @@
 #include <wsutil/report_message.h>
 #include <wsutil/strnatcmp.h>
 #include <wsutil/str_util.h>
-#include <ws_version_info.h>
+#include <version_info.h>
 #include <wsutil/pint.h>
 #include <wsutil/strtoi.h>
 #include <wiretap/wtap_opttypes.h>
@@ -830,7 +816,6 @@ print_usage(FILE *output)
     fprintf(output, "                         If -v is used with any of the 'Duplicate Packet\n");
     fprintf(output, "                         Removal' options (-d, -D or -w) then Packet lengths\n");
     fprintf(output, "                         and MD5 hashes are printed to standard-error.\n");
-    fprintf(output, "\n");
 }
 
 struct string_elem {
@@ -853,21 +838,21 @@ string_nat_compare(gconstpointer a, gconstpointer b)
 }
 
 static void
-string_elem_print(gpointer data, gpointer not_used _U_)
+string_elem_print(gpointer data, gpointer stream_ptr)
 {
-    fprintf(stderr, "    %s - %s\n",
+    fprintf((FILE *) stream_ptr, "    %s - %s\n",
         ((struct string_elem *)data)->sstr,
         ((struct string_elem *)data)->lstr);
 }
 
 static void
-list_capture_types(void) {
+list_capture_types(FILE *stream) {
     int i;
     struct string_elem *captypes;
     GSList *list = NULL;
 
     captypes = g_new(struct string_elem,WTAP_NUM_FILE_TYPES_SUBTYPES);
-    fprintf(stderr, "editcap: The available capture file types for the \"-F\" flag are:\n");
+    fprintf(stream, "editcap: The available capture file types for the \"-F\" flag are:\n");
     for (i = 0; i < WTAP_NUM_FILE_TYPES_SUBTYPES; i++) {
         if (wtap_dump_can_open(i)) {
             captypes[i].sstr = wtap_file_type_subtype_short_string(i);
@@ -875,19 +860,19 @@ list_capture_types(void) {
             list = g_slist_insert_sorted(list, &captypes[i], string_compare);
         }
     }
-    g_slist_foreach(list, string_elem_print, NULL);
+    g_slist_foreach(list, string_elem_print, stream);
     g_slist_free(list);
     g_free(captypes);
 }
 
 static void
-list_encap_types(void) {
+list_encap_types(FILE *stream) {
     int i;
     struct string_elem *encaps;
     GSList *list = NULL;
 
     encaps = (struct string_elem *)g_malloc(sizeof(struct string_elem) * WTAP_NUM_ENCAP_TYPES);
-    fprintf(stderr, "editcap: The available encapsulation types for the \"-T\" flag are:\n");
+    fprintf(stream, "editcap: The available encapsulation types for the \"-T\" flag are:\n");
     for (i = 0; i < WTAP_NUM_ENCAP_TYPES; i++) {
         encaps[i].sstr = wtap_encap_short_string(i);
         if (encaps[i].sstr != NULL) {
@@ -895,7 +880,7 @@ list_encap_types(void) {
             list = g_slist_insert_sorted(list, &encaps[i], string_nat_compare);
         }
     }
-    g_slist_foreach(list, string_elem_print, NULL);
+    g_slist_foreach(list, string_elem_print, stream);
     g_slist_free(list);
     g_free(encaps);
 }
@@ -1062,7 +1047,7 @@ main(int argc, char *argv[])
 #endif
 
     /* Process the options */
-    while ((opt = getopt_long(argc, argv, "a:A:B:c:C:dD:E:F:hi:I:Lo:rs:S:t:T:vVw:", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, ":a:A:B:c:C:dD:E:F:hi:I:Lo:rs:S:t:T:vVw:", long_options, NULL)) != -1) {
         switch (opt) {
         case 0x8100:
         {
@@ -1205,7 +1190,7 @@ main(int argc, char *argv[])
             if (out_file_type_subtype < 0) {
                 fprintf(stderr, "editcap: \"%s\" isn't a valid capture file type\n\n",
                         optarg);
-                list_capture_types();
+                list_capture_types(stderr);
                 ret = INVALID_OPTION;
                 goto clean_exit;
             }
@@ -1264,7 +1249,7 @@ main(int argc, char *argv[])
             if (out_frame_type < 0) {
                 fprintf(stderr, "editcap: \"%s\" isn't a valid encapsulation type\n\n",
                         optarg);
-                list_encap_types();
+                list_encap_types(stderr);
                 ret = INVALID_OPTION;
                 goto clean_exit;
             }
@@ -1294,18 +1279,24 @@ main(int argc, char *argv[])
             break;
 
         case '?':              /* Bad options if GNU getopt */
+        case ':':              /* missing option argument */
             switch(optopt) {
             case'F':
-                list_capture_types();
+                list_capture_types(stdout);
                 break;
             case'T':
-                list_encap_types();
+                list_encap_types(stdout);
                 break;
             default:
+                if (opt == '?') {
+                    fprintf(stderr, "editcap: invalid option -- '%c'\n", optopt);
+                } else {
+                    fprintf(stderr, "editcap: option requires an argument -- '%c'\n", optopt);
+                }
                 print_usage(stderr);
+                ret = INVALID_OPTION;
                 break;
             }
-            ret = INVALID_OPTION;
             goto clean_exit;
             break;
         }

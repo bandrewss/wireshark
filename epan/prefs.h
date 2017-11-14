@@ -154,6 +154,7 @@ typedef struct _e_prefs {
   gboolean     gui_altern_colors; /* GTK only */
   gboolean     gui_expert_composite_eyecandy;
   gboolean     filter_toolbar_show_in_statusbar;
+  gboolean     restore_filter_after_following_stream;
   gint         gui_ptree_line_style;
   gint         gui_ptree_expander_style;
   gboolean     gui_hex_dump_highlight_style;
@@ -220,6 +221,7 @@ typedef struct _e_prefs {
   gboolean     display_byte_fields_with_spaces;
   gboolean     enable_incomplete_dissectors_check;
   gboolean     incomplete_dissectors_check_debug;
+  gboolean     strict_conversation_tracking_heuristics;
   gboolean     gui_update_enabled;
   software_update_channel_e gui_update_channel;
   gint         gui_update_interval;

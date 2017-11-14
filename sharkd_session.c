@@ -6,19 +6,7 @@
  * By Gerald Combs <gerald@wireshark.org>
  * Copyright 1998 Gerald Combs
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * SPDX-License-Identifier: GPL-2.0+
  */
 
 #include <config.h>
@@ -34,6 +22,7 @@
 #include <wsutil/ws_printf.h>
 
 #include <file.h>
+#include <epan/epan_dissect.h>
 #include <epan/exceptions.h>
 #include <epan/color_filters.h>
 #include <epan/prefs.h>
@@ -637,9 +626,10 @@ struct sharkd_analyse_data
 };
 
 static void
-sharkd_session_process_analyse_cb(packet_info *pi, proto_tree *tree, struct epan_column_info *cinfo, const GSList *data_src, void *data)
+sharkd_session_process_analyse_cb(epan_dissect_t *edt, proto_tree *tree, struct epan_column_info *cinfo, const GSList *data_src, void *data)
 {
 	struct sharkd_analyse_data *analyser = (struct sharkd_analyse_data *) data;
+	packet_info *pi = &edt->pi;
 	frame_data *fdata = pi->fd;
 
 	(void) tree;
@@ -712,12 +702,84 @@ sharkd_session_process_analyse(void)
 	g_hash_table_destroy(analyser.protocols_set);
 }
 
+static column_info *
+sharkd_session_create_columns(column_info *cinfo, const char *buf, const jsmntok_t *tokens, int count)
+{
+	const char *columns_custom[32];
+	guint16 columns_fmt[32];
+	gint16 columns_occur[32];
+
+	int i, cols;
+
+	for (i = 0; i < 32; i++)
+	{
+		const char *tok_column;
+		char tok_column_name[64];
+		char *custom_sepa;
+
+		ws_snprintf(tok_column_name, sizeof(tok_column_name), "column%d", i);
+		tok_column = json_find_attr(buf, tokens, count, tok_column_name);
+		if (tok_column == NULL)
+			break;
+
+		if ((custom_sepa = strchr(tok_column, ':')))
+		{
+			*custom_sepa = '\0'; /* XXX, C abuse: discarding-const */
+
+			columns_fmt[i] = COL_CUSTOM;
+			columns_custom[i] = tok_column;
+			columns_occur[i] = 0;
+
+			if (!ws_strtoi16(custom_sepa + 1, NULL, &columns_occur[i]))
+				return NULL;
+		}
+		else
+		{
+			if (!ws_strtou16(tok_column, NULL, &columns_fmt[i]))
+				return NULL;
+
+			if (columns_fmt[i] >= NUM_COL_FMTS)
+				return NULL;
+
+			/* if custom, that it shouldn't be just custom number -> error */
+			if (columns_fmt[i] == COL_CUSTOM)
+				return NULL;
+		}
+	}
+
+	cols = i;
+
+	col_setup(cinfo, cols);
+
+	for (i = 0; i < cols; i++)
+	{
+		col_item_t *col_item = &cinfo->columns[i];
+
+		col_item->col_fmt = columns_fmt[i];
+		col_item->col_title = NULL; /* no need for title */
+
+		if (col_item->col_fmt == COL_CUSTOM)
+		{
+			col_item->col_custom_fields = g_strdup(columns_custom[i]);
+			col_item->col_custom_occurrence = columns_occur[i];
+		}
+
+		col_item->col_fence = 0;
+	}
+
+	col_finalize(cinfo);
+
+	return cinfo;
+}
+
 /**
  * sharkd_session_process_frames()
  *
  * Process frames request
  *
  * Input:
+ *   (o) column0...columnXX - requested columns either number in range [0..NUM_COL_FMTS), or custom (syntax <dfilter>:<occurence>).
+ *                            If column0 is not specified default column set will be used.
  *   (o) filter - filter to be used
  *   (o) skip=N   - skip N frames
  *   (o) limit=N  - show only N frames
@@ -725,15 +787,17 @@ sharkd_session_process_analyse(void)
  * Output array of frames with attributes:
  *   (m) c   - array of column data
  *   (m) num - frame number
- *   (m) i   - if frame is ignored
- *   (m) m   - if frame is marked
- *   (m) bg  - color filter - background color in hex
- *   (m) fg  - color filter - foreground color in hex
+ *   (o) i   - if frame is ignored
+ *   (o) m   - if frame is marked
+ *   (o) ct  - if frame is commented
+ *   (o) bg  - color filter - background color in hex
+ *   (o) fg  - color filter - foreground color in hex
  */
 static void
 sharkd_session_process_frames(const char *buf, const jsmntok_t *tokens, int count)
 {
 	const char *tok_filter = json_find_attr(buf, tokens, count, "filter");
+	const char *tok_column = json_find_attr(buf, tokens, count, "column0");
 	const char *tok_skip   = json_find_attr(buf, tokens, count, "skip");
 	const char *tok_limit  = json_find_attr(buf, tokens, count, "limit");
 
@@ -747,6 +811,15 @@ sharkd_session_process_frames(const char *buf, const jsmntok_t *tokens, int coun
 	guint32 limit;
 
 	column_info *cinfo = &cfile.cinfo;
+	column_info user_cinfo;
+
+	if (tok_column)
+	{
+		memset(&user_cinfo, 0, sizeof(user_cinfo));
+		cinfo = sharkd_session_create_columns(&user_cinfo, buf, tokens, count);
+		if (!cinfo)
+			return;
+	}
 
 	if (tok_filter)
 	{
@@ -796,6 +869,9 @@ sharkd_session_process_frames(const char *buf, const jsmntok_t *tokens, int coun
 			json_puts_string(col_item->col_data);
 		}
 		printf("],\"num\":%u", framenum);
+
+		if (fdata->flags.has_phdr_comment)
+			printf(",\"ct\":true");
 
 		if (fdata->flags.ignored)
 			printf(",\"i\":true");
@@ -1155,7 +1231,7 @@ sharkd_session_geoip_addr(address *addr, const char *suffix)
 #ifdef HAVE_GEOIP_V6
 	if (addr->type == AT_IPv6)
 	{
-		const struct e_in6_addr *ip6 = (const struct e_in6_addr *) addr->data;
+		const ws_in6_addr *ip6 = (const ws_in6_addr *) addr->data;
 
 		guint num_dbs = geoip_db_num_dbs();
 		guint dbnum;
@@ -1471,8 +1547,8 @@ sharkd_session_process_tap_conv_cb(void *arg)
 
 			if (proto_with_port)
 			{
-				printf(",\"sport\":\"%s\"", (src_port = get_conversation_port(NULL, iui->src_port, iui->ptype, iu->resolve_port)));
-				printf(",\"dport\":\"%s\"", (dst_port = get_conversation_port(NULL, iui->dst_port, iui->ptype, iu->resolve_port)));
+				printf(",\"sport\":\"%s\"", (src_port = get_conversation_port(NULL, iui->src_port, iui->etype, iu->resolve_port)));
+				printf(",\"dport\":\"%s\"", (dst_port = get_conversation_port(NULL, iui->dst_port, iui->etype, iu->resolve_port)));
 
 				wmem_free(NULL, src_port);
 				wmem_free(NULL, dst_port);
@@ -1519,7 +1595,7 @@ sharkd_session_process_tap_conv_cb(void *arg)
 
 			if (proto_with_port)
 			{
-				printf(",\"port\":\"%s\"", (port_str = get_conversation_port(NULL, host->port, host->ptype, iu->resolve_port)));
+				printf(",\"port\":\"%s\"", (port_str = get_conversation_port(NULL, host->port, host->etype, iu->resolve_port)));
 
 				wmem_free(NULL, port_str);
 			}
@@ -2173,7 +2249,6 @@ sharkd_session_process_tap(char *buf, const jsmntok_t *tokens, int count)
 
 			graph_analysis = sequence_analysis_info_new();
 			graph_analysis->name = tok_tap + 5;
-			graph_analysis->all_packets = TRUE;
 			/* TODO, make configurable */
 			graph_analysis->any_addr = FALSE;
 
@@ -2547,7 +2622,7 @@ sharkd_session_process_follow(char *buf, const jsmntok_t *tokens, int count)
 }
 
 static void
-sharkd_session_process_frame_cb_tree(proto_tree *tree, tvbuff_t **tvbs)
+sharkd_session_process_frame_cb_tree(epan_dissect_t *edt, proto_tree *tree, tvbuff_t **tvbs)
 {
 	proto_node *node;
 	const char *sepa = "";
@@ -2603,6 +2678,8 @@ sharkd_session_process_frame_cb_tree(proto_tree *tree, tvbuff_t **tvbs)
 
 		if (finfo->hfinfo)
 		{
+			char *filter;
+
 			if (finfo->hfinfo->type == FT_PROTOCOL)
 			{
 				printf(",\"t\":\"proto\"");
@@ -2619,6 +2696,14 @@ sharkd_session_process_frame_cb_tree(proto_tree *tree, tvbuff_t **tvbs)
 				json_puts_string(url);
 				wmem_free(NULL, url);
 			}
+
+			filter = proto_construct_match_selected_string(finfo, edt);
+			if (filter)
+			{
+				printf(",\"f\":");
+				json_puts_string(filter);
+				wmem_free(NULL, filter);
+			}
 		}
 
 		if (FI_GET_FLAG(finfo, PI_SEVERITY_MASK))
@@ -2634,7 +2719,7 @@ sharkd_session_process_frame_cb_tree(proto_tree *tree, tvbuff_t **tvbs)
 			if (finfo->tree_type != -1)
 				printf(",\"e\":%d", finfo->tree_type);
 			printf(",\"n\":");
-			sharkd_session_process_frame_cb_tree((proto_tree *) node, tvbs);
+			sharkd_session_process_frame_cb_tree(edt, (proto_tree *) node, tvbs);
 		}
 
 		printf("}");
@@ -2671,14 +2756,26 @@ sharkd_follower_visit_layers_cb(const void *key _U_, void *value, void *user_dat
 }
 
 static void
-sharkd_session_process_frame_cb(packet_info *pi, proto_tree *tree, struct epan_column_info *cinfo, const GSList *data_src, void *data)
+sharkd_session_process_frame_cb(epan_dissect_t *edt, proto_tree *tree, struct epan_column_info *cinfo, const GSList *data_src, void *data)
 {
-	(void) pi;
+	packet_info *pi = &edt->pi;
+	frame_data *fdata = pi->fd;
+	const char *pkt_comment = NULL;
+
 	(void) data;
 
 	printf("{");
 
 	printf("\"err\":0");
+
+	if (fdata->flags.has_phdr_comment)
+		pkt_comment = pi->phdr->opt_comment;
+
+	if (pkt_comment)
+	{
+		printf(",\"comment\":");
+		json_puts_string(pkt_comment);
+	}
 
 	if (tree)
 	{
@@ -2704,7 +2801,7 @@ sharkd_session_process_frame_cb(packet_info *pi, proto_tree *tree, struct epan_c
 			tvbs[count] = NULL;
 		}
 
-		sharkd_session_process_frame_cb_tree(tree, tvbs);
+		sharkd_session_process_frame_cb_tree(edt, tree, tvbs);
 
 		g_free(tvbs);
 	}
@@ -2931,6 +3028,7 @@ sharkd_session_process_intervals(char *buf, const jsmntok_t *tokens, int count)
  *   (o) tree  - array of frame nodes with attributes:
  *                  l - label
  *                  t: 'proto', 'framenum', 'url' - type of node
+ *                  f - filter string
  *                  s - severity
  *                  e - subtree ett index
  *                  n - array of subtree nodes
@@ -2944,6 +3042,7 @@ sharkd_session_process_intervals(char *buf, const jsmntok_t *tokens, int count)
  *   (o) col   - array of column data
  *   (o) bytes - base64 of frame bytes
  *   (o) ds    - array of other data srcs
+ *   (o) comment - frame comment
  *   (o) fol   - array of follow filters:
  *                  [0] - protocol
  *                  [1] - filter string
@@ -3424,7 +3523,7 @@ sharkd_session_process_dumpconf(char *buf, const jsmntok_t *tokens, int count)
 		printf("{\"prefs\":{");
 		prefs_pref_foreach(pref_mod, sharkd_session_process_dumpconf_cb, &data);
 		printf("}}\n");
-    }
+	}
 }
 
 struct sharkd_download_rtp
@@ -3764,13 +3863,19 @@ sharkd_session_process(char *buf, const jsmntok_t *tokens, int count)
 			return;
 		}
 
+		if (tokens[i + 1].type != JSMN_STRING && tokens[i + 1].type != JSMN_PRIMITIVE)
+		{
+			fprintf(stderr, "sanity check(3a): [%d] wrong type\n", i + 1);
+			return;
+		}
+
 		buf[tokens[i + 0].end] = '\0';
 		buf[tokens[i + 1].end] = '\0';
 
 		/* unescape only value, as keys are simple strings */
-		if (!json_unescape_str(&buf[tokens[i + 1].start]))
+		if (tokens[i + 1].type == JSMN_STRING && !json_unescape_str(&buf[tokens[i + 1].start]))
 		{
-			fprintf(stderr, "sanity check(3a): [%d] cannot unescape string\n", i + 1);
+			fprintf(stderr, "sanity check(3b): [%d] cannot unescape string\n", i + 1);
 			return;
 		}
 	}

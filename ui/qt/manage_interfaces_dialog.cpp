@@ -36,7 +36,7 @@
 #endif
 #include "ui/iface_lists.h"
 #include "ui/preference_utils.h"
-#include "ui/ui_util.h"
+#include "ui/ws_ui_util.h"
 #include <wsutil/utf8_entities.h>
 
 #include <ui/qt/utils/qt_ui_utils.h>
@@ -87,6 +87,7 @@ ManageInterfacesDialog::ManageInterfacesDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     loadGeometry();
+    setAttribute(Qt::WA_DeleteOnClose, true);
 
 #ifdef Q_OS_MAC
     ui->addPipe->setAttribute(Qt::WA_MacSmallSize, true);

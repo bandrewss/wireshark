@@ -38,6 +38,7 @@
 #include "packet_info.h"
 #include "tap.h"
 #include "address.h"
+#include "wsutil/file_util.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,7 +69,6 @@ typedef struct _seq_analysis_item {
 /** defines the graph analysis structure */
 typedef struct _seq_analysis_info {
     const char* name;  /**< Name of sequence analysis */
-    gboolean    all_packets; /**< all packets vs only displayed */
     gboolean    any_addr;    /**< any addr (DL+net) vs net-only */
     int         nconv;       /**< number of conversations in the list */
     GQueue*     items;       /**< list of seq_analysis_info_t */
@@ -198,6 +198,15 @@ WS_DLL_PUBLIC int sequence_analysis_get_nodes(seq_analysis_info_t *sainfo);
  * @param sainfo Sequence analysis information.
  */
 WS_DLL_PUBLIC void sequence_analysis_free_nodes(seq_analysis_info_t *sainfo);
+
+
+/** Write an ASCII version of the sequence diagram to a file.
+ *
+ * @param of File to write.
+ * @param sainfo Sequence analysis information.
+ * @param first_node Start drawing at this node.
+ */
+WS_DLL_PUBLIC void sequence_analysis_dump_to_file(FILE *of, seq_analysis_info_t *sainfo, unsigned int first_node);
 
 #ifdef __cplusplus
 }

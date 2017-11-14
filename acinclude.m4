@@ -131,6 +131,9 @@ AC_DEFUN([AC_WIRESHARK_PCAP_BREAKLOOP_TRY_LINK],
 #
 AC_DEFUN([AC_WIRESHARK_PCAP_CHECK],
 [
+	AC_WIRESHARK_PUSH_FLAGS
+	ws_ac_save_LIBS="$LIBS"
+
 	if test -z "$pcap_dir"
 	then
 	  # Pcap header checks
@@ -174,7 +177,17 @@ AC_DEFUN([AC_WIRESHARK_PCAP_CHECK],
 	    # Found it, and it's usable; use it to get the include flags
 	    # for libpcap.
 	    #
-	    CPPFLAGS="$CPPFLAGS `\"$PCAP_CONFIG\" --cflags`"
+	    PCAP_CFLAGS="`\"$PCAP_CONFIG\" --cflags`"
+	    #
+	    # We have pcap-config; we assume that means we have libpcap
+	    # installed and that pcap-config will tell us whatever
+	    # libraries libpcap needs.
+	    #
+	    if test x$enable_static = xyes; then
+	      PCAP_LIBS="`\"$PCAP_CONFIG\" --libs --static`"
+	    else
+	      PCAP_LIBS="`\"$PCAP_CONFIG\" --libs`"
+	    fi
 	  else
 	    #
 	    # Didn't find it; we have to look for libpcap ourselves.
@@ -182,13 +195,14 @@ AC_DEFUN([AC_WIRESHARK_PCAP_CHECK],
 	    # but we may have to look for the header in a "pcap"
 	    # subdirectory of "/usr/include" or "/usr/local/include",
 	    # as some systems apparently put "pcap.h" in a "pcap"
-	    # subdirectory, and we also check "$prefix/include" - and
+	    # subdirectory without also providing a "pcap.h" in the top-level
+	    # include directory, and we also check "$prefix/include" - and
 	    # "$prefix/include/pcap", in case $prefix is set to
 	    # "/usr/include" or "/usr/local/include".
 	    #
-	    # XXX - should we just add "$prefix/include" to the include
-	    # search path and "$prefix/lib" to the library search path?
-	    #
+	    PCAP_CFLAGS=""
+	    PCAP_LIBS="-lpcap"
+
 	    AC_MSG_CHECKING(for extraneous pcap header directories)
 	    found_pcap_dir=""
 	    pcap_dir_list="/usr/local/include/pcap /usr/include/pcap $prefix/include/pcap $prefix/include"
@@ -196,7 +210,7 @@ AC_DEFUN([AC_WIRESHARK_PCAP_CHECK],
 	    do
 	      if test -d $pcap_dir ; then
 		if test x$pcap_dir != x/usr/include -a x$pcap_dir != x/usr/local/include ; then
-		    CPPFLAGS="$CPPFLAGS -I$pcap_dir"
+		    PCAP_CFLAGS="-I$pcap_dir"
 		fi
 		found_pcap_dir=" $found_pcap_dir -I$pcap_dir"
 		break
@@ -222,85 +236,79 @@ AC_DEFUN([AC_WIRESHARK_PCAP_CHECK],
 	  # and/or linker will search that other directory before it
 	  # searches the specified directory.
 	  #
-	  CPPFLAGS="$CPPFLAGS -I$pcap_dir/include"
-	  AC_WIRESHARK_ADD_DASH_L(LDFLAGS, $pcap_dir/lib)
+	  PCAP_CFLAGS="-I$pcap_dir/include"
+	  #
+	  # XXX - This doesn't use AC_WIRESHARK_ADD_DASH_L
+	  #
+	  PCAP_LIBS="-L$pcap_dir/lib -lpcap"
 	fi
+
+	CFLAGS="$PCAP_CFLAGS $CFLAGS"
+	LIBS="$PCAP_LIBS $LIBS"
 
 	# Pcap header check
-	AC_CHECK_HEADER(pcap.h,,
-	    AC_MSG_ERROR([[Header file pcap.h not found; if you installed libpcap
+	AC_CHECK_HEADER(pcap.h,
+	  [
+	      AC_DEFINE(HAVE_LIBPCAP, 1, [Define to use libpcap library])
+	  ],
+	  [
+	      AC_MSG_ERROR([[Header file pcap.h not found; if you installed libpcap
 from source, did you also do \"make install-incl\", and if you installed a
 binary package of libpcap, is there also a developer's package of libpcap,
-and did you also install that package?]]))
+and did you also install that package?]])
+	  ])
 
-	if test -n "$PCAP_CONFIG" ; then
-	  #
-	  # We have pcap-config; we assume that means we have libpcap
-	  # installed and that pcap-config will tell us whatever
-	  # libraries libpcap needs.
-	  #
-	  if test x$enable_static = xyes; then
-	    PCAP_LIBS="`\"$PCAP_CONFIG\" --libs --static`"
-	  else
-	    PCAP_LIBS="`\"$PCAP_CONFIG\" --libs`"
-	  fi
-	  AC_DEFINE(HAVE_LIBPCAP, 1, [Define to use libpcap library])
-	else
-	  #
-	  # Check to see if we find "pcap_open_live" in "-lpcap".
-	  # Also check for various additional libraries that libpcap might
-	  # require.
-	  #
-	  AC_CHECK_LIB(pcap, pcap_open_live,
-	    [
-	      PCAP_LIBS=-lpcap
-	      AC_DEFINE(HAVE_LIBPCAP, 1, [Define to use libpcap library])
-	    ], [
-	      ac_wireshark_extras_found=no
-	      ac_save_LIBS="$LIBS"
-	      for extras in "-lcfg -lodm" "-lpfring"
-	      do
-		AC_MSG_CHECKING([for pcap_open_live in -lpcap with $extras])
-		LIBS="-lpcap $extras $ac_save_LIBS"
-		#
-		# XXX - can't we use AC_CHECK_LIB here?
-		#
-		AC_TRY_LINK(
-		    [
+	#
+	# Check to see if we find "pcap_open_live" in "-lpcap".
+	# Also check for various additional libraries that libpcap might
+	# require.
+	#
+	AC_CHECK_LIB(pcap, pcap_open_live,
+	  [
+	  ],
+	  [
+	    ac_wireshark_extras_found=no
+	    ac_save_LIBS="$LIBS"
+	    for extras in "-lcfg -lodm" "-lpfring"
+	    do
+	      AC_MSG_CHECKING([for pcap_open_live in -lpcap with $extras])
+	      LIBS="-lpcap $extras $ac_save_LIBS"
+	      #
+	      # XXX - can't we use AC_CHECK_LIB here?
+	      #
+	      AC_TRY_LINK(
+		[
 #	include <pcap.h>
-		    ],
-		    [
+		],
+		[
 	pcap_open_live(NULL, 0, 0, 0, NULL);
-		    ],
-		    [
-			ac_wireshark_extras_found=yes
-			AC_MSG_RESULT([yes])
-			PCAP_LIBS="-lpcap $extras"
-			AC_DEFINE(HAVE_LIBPCAP, 1, [Define to use libpcap library])
-		    ],
-		    [
-			AC_MSG_RESULT([no])
-		    ])
+		],
+		[
+		  ac_wireshark_extras_found=yes
+		  AC_MSG_RESULT([yes])
+		  PCAP_LIBS="$PCAP_LIBS $extras"
+		],
+		[
+		  AC_MSG_RESULT([no])
+		])
 		if test x$ac_wireshark_extras_found = xyes
 		then
-		    break
+		  break
 		fi
-	      done
-	      if test x$ac_wireshark_extras_found = xno
-	      then
-		AC_MSG_ERROR([Can't link with library libpcap.])
-	      fi
-	      LIBS=$ac_save_LIBS
-	    ])
-	fi
+	    done
+	    if test x$ac_wireshark_extras_found = xno
+	    then
+	      AC_MSG_ERROR([Can't link with library libpcap.])
+	    fi
+	    LIBS=$ac_save_LIBS
+	  ])
+	AC_SUBST(PCAP_CFLAGS)
 	AC_SUBST(PCAP_LIBS)
 
 	#
 	# Check whether various variables and functions are defined by
 	# libpcap.
 	#
-	ac_save_LIBS="$LIBS"
-	LIBS="$PCAP_LIBS $LIBS"
 	AC_CHECK_FUNCS(pcap_open_dead pcap_freecode)
 	#
 	# pcap_breakloop may be present in the library but not declared
@@ -413,7 +421,8 @@ install a newer version of the header file.])
 	  AC_CHECK_FUNCS(bpf_image pcap_set_tstamp_precision pcap_set_tstamp_type)
 	fi
 
-	LIBS="$ac_save_LIBS"
+	AC_WIRESHARK_POP_FLAGS
+	LIBS="$ws_ac_save_LIBS"
 ])
 
 AC_DEFUN([AC_WIRESHARK_PCAP_REMOTE_CHECK],
@@ -910,7 +919,7 @@ AC_DEFUN([AC_WIRESHARK_KRB5_CHECK],
 	  ac_krb5_version="$ac_heimdal_version$ac_mit_version_olddir$ac_mit_version_newdir"
 	  if test "x$ac_krb5_version" = "xHEIMDAL"
 	  then
-	      KRB5_LIBS="-L$krb5_dir/lib -lkrb5 -lasn1 $SSL_LIBS -lroken -lcrypt"
+	      KRB5_LIBS="-L$krb5_dir/lib -lkrb5 -lasn1 -lcrypto -lroken -lcrypt"
 	  else
 	      KRB5_LIBS="-L$krb5_dir/lib -lkrb5 -lk5crypto -lcom_err"
 	  fi
@@ -924,33 +933,23 @@ AC_DEFUN([AC_WIRESHARK_KRB5_CHECK],
 	  then
 	    KRB5_CFLAGS=`"$KRB5_CONFIG" --cflags`
 	    KRB5_LIBS=`"$KRB5_CONFIG" --libs`
-	    #
-	    # If -lcrypto is in KRB5_FLAGS, we require it to build
-	    # with Heimdal/MIT.  We don't want to built with it by
-	    # default, due to annoying license incompatibilities
-	    # between the OpenSSL license and the GPL, so:
-	    #
-	    #	if SSL_LIBS is set to a non-empty string, we
-	    #	remove -lcrypto from KRB5_LIBS and replace
-	    #	it with SSL_LIBS;
-	    #
-	    #	if SSL_LIBS is not set to a non-empty string
-	    #	we fail with an appropriate error message.
-	    #
-	    case "$KRB5_LIBS" in
-	    *-lcrypto*)
-		if test ! -z "$SSL_LIBS"
-		then
-		    KRB5_LIBS=`echo $KRB5_LIBS | sed 's/-lcrypto//'`
-		    KRB5_LIBS="$KRB5_LIBS $SSL_LIBS"
-		else
-		    AC_MSG_ERROR([Kerberos library requires -lcrypto, so you must specify --with-ssl])
-		fi
-		;;
-	    esac
 	    ac_krb5_version=`"$KRB5_CONFIG" --version | head -n 1 | sed -e 's/^.*heimdal.*$/HEIMDAL/' -e 's/^Kerberos .*$/MIT/' -e 's/^Solaris Kerberos .*$/MIT/'`
  	  fi
 	fi
+	#
+	# If -lcrypto is in KRB5_LIBS, we require it to build
+	# with Heimdal/MIT.  We don't want to built with it by
+	# default, due to annoying license incompatibilities
+	# between the OpenSSL license and the GPL.
+	#
+	case "$KRB5_LIBS" in
+	*-lcrypto*)
+	  if test "x$with_krb5_crypto_openssl" != "xyes"
+	    then
+	      AC_MSG_ERROR([Kerberos library requires -lcrypto, so you must specify --with-krb5-crypto-openssl])
+	    fi
+	    ;;
+	esac
 
 	CPPFLAGS="$CPPFLAGS $KRB5_CFLAGS"
 

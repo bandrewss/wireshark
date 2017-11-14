@@ -2184,7 +2184,7 @@ epl_get_convo(packet_info *pinfo, int opts)
 	node_addr = &epl_placeholder_mac;
 
 	if ((epan_convo = find_conversation(pinfo->num, node_addr, node_addr,
-				pinfo->ptype, node_port, node_port, NO_ADDR_B|NO_PORT_B)))
+				conversation_pt_to_endpoint_type(pinfo->ptype), node_port, node_port, NO_ADDR_B|NO_PORT_B)))
 	{
 		/* XXX Do I need to check setup_frame != pinfo->num in order to not
 		 * create unnecessary new conversations?
@@ -2201,7 +2201,7 @@ epl_get_convo(packet_info *pinfo, int opts)
 	{
 new_convo_creation:
 		epan_convo = conversation_new(pinfo->num, node_addr, node_addr,
-				pinfo->ptype, node_port, node_port, NO_ADDR2|NO_PORT2);
+				conversation_pt_to_endpoint_type(pinfo->ptype), node_port, node_port, NO_ADDR2|NO_PORT2);
 	}
 
 	convo = (struct epl_convo*)conversation_get_proto_data(epan_convo, proto_epl);
@@ -2324,9 +2324,7 @@ static void
 free_key(gpointer ptr)
 {
 	duplication_key *key = (duplication_key *)ptr;
-
-	if(key)
-		g_slice_free(duplication_key, key);
+	g_slice_free(duplication_key, key);
 }
 
 /* removes the table entries of a specific transfer */
@@ -4367,12 +4365,12 @@ dissect_epl_sdo_command_write_multiple_by_index(struct epl_convo *convo, proto_t
 				else
 					col_append_str(pinfo->cinfo, COL_INFO, ".");
 
-				if (sod_index != error)
-					idx = sod_index;
-
 				dataoffset += 2;
 
 				proto_item_append_text(psf_od_tree, " Idx: 0x%04X", idx);
+
+				if (sod_index != error)
+					idx = sod_index;
 
 				/* get subindex offset */
 				subindex = tvb_get_guint8(tvb, dataoffset);
@@ -4517,11 +4515,11 @@ dissect_epl_sdo_command_write_multiple_by_index(struct epl_convo *convo, proto_t
 				else
 					col_append_str(pinfo->cinfo, COL_INFO, ".");
 
-				if (sod_index != error)
-					idx = sod_index;
-
 				proto_tree_add_uint_format(psf_od_tree, hf_epl_asnd_sdo_cmd_data_mapping_index, tvb, dataoffset, 2, idx,"Index: 0x%04X", idx);
 				proto_item_append_text(psf_od_tree, " Idx: 0x%04X", idx);
+
+				if (sod_index != error)
+					idx = sod_index;
 
 				dataoffset += 2;
 

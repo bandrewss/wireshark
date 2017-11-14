@@ -38,10 +38,11 @@
 #include <wsutil/filesystem.h>
 #include <wsutil/privileges.h>
 #include <wsutil/report_message.h>
-#include <ws_version_info.h>
+#include <version_info.h>
 
 #include <wiretap/wtap.h>
 
+#include <epan/color_filters.h>
 #include <epan/timestamp.h>
 #include <epan/prefs.h>
 #include <epan/column.h>
@@ -144,6 +145,9 @@ fuzz_init(int argc _U_, char **argv)
 #if defined(FUZZ_DISSECTOR_TARGET)
 	dissector_handle_t fuzz_handle = NULL;
 #endif
+
+	setenv("WIRESHARK_DEBUG_WMEM_OVERRIDE", "simple", 0);
+	setenv("G_SLICE", "always-malloc", 0);
 
 	cmdarg_err_init(failure_warning_message, failure_message_cont);
 

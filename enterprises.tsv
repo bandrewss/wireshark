@@ -5,7 +5,7 @@
 # The format used here is: <NUMERICAL_ID><SPACE><NAME>
 # Where SPACE can be any sequence of spaces and tabs.
 #
-# (last updated 2017-09-16)
+# (last updated 2017-11-11)
 
 0	Reserved
 1	NxNetworks
@@ -425,7 +425,7 @@
 415	JTEC Pty, Ltd.
 416	Matra Communcation
 417	HAL Computer Systems
-418	Lawrence Berkeley Laboratory
+418	Lawrence Berkeley National Laboratory
 419	Dale Computer Corporation
 420	University of Tuebingen
 421	Bytex Corporation
@@ -5111,7 +5111,7 @@
 5116	IBM, NUMA-Q Division
 5117	Kaelin Colclasure
 5118	Dantel,Inc.
-5119	SYCOR AG
+5119	SYCOR GmbH
 5120	EMF Home Inspection Inc.
 5121	League Scoring
 5122	Everest eCommerce, Inc.
@@ -6286,7 +6286,7 @@
 6299	SUNY Cortland
 6300	Karl Miller
 6301	Packet Dynamics Ltd
-6302	Emerson Energy Systems
+6302	Vertiv	# formerly 'Emerson Energy Systems'
 6303	Cityspace Ltd
 6304	fogcity
 6305	Flextronics International
@@ -6776,7 +6776,7 @@
 6790	Finjan Software
 6791	EXE Technologies, Inc.
 6792	Active+ Software
-6793	UTIasi
+6793	TUIASI (previously 'UTIasi')
 6794	Adhesive Software Incorporated
 6795	Pocono Pet Sitters
 6796	TekVision Communications
@@ -9934,7 +9934,7 @@
 9957	Dynamic Equilibrium Pty Ltd
 9958	Formula/400
 9959	NODS
-9960	nuisys.com
+9960	iOpsMon	# formerly 'nuisys.com'
 9961	FundsXpress Financial Network
 9962	VirCIO, LLP
 9963	Advanced Computer Technologies (ACT) Inc.
@@ -13293,7 +13293,7 @@
 13424	UPC Netherlands
 13425	Virtual Space Research
 13426	WZab Software
-13427	Artesyn Embedded Technologies	# formerly 'Emerson Network Power '
+13427	Artesyn Embedded Technologies
 13428	JAPAN STORAGE BATTERY CO., Ltd.
 13429	Queen Elizabeth School Old Students' Association
 13430	Shanghai Online Bussiness Co.,Ltd.
@@ -15132,7 +15132,7 @@
 15268	Oy NetItBe Ltd
 15269	Craniac Entertainment
 15270	Printcafe Software, Inc.
-15271	Oberfinanzdirektion Koblenz
+15271	Landesamt fuer Steuern	# formerly 'Oberfinanzdirektion Koblenz'
 15272	MaaTec
 15273	The Paloma Group, Inc.
 15274	Paul Scherrer Institut
@@ -16169,7 +16169,7 @@
 16306	Repsol Distribucion
 16307	StreamScale
 16308	RHOEN-KLINIKUM AG
-16309	NTT Software Corporation
+16309	NTT TechnoCross Corporation	# formerly 'NTT Software Corporation'
 16310	Marketline Rt.
 16311	Alatec, S.A.
 16312	Register.com
@@ -24547,7 +24547,7 @@
 24701	Spitzenverbände der landwirtschaftlichen Sozialversicherung
 24702	CLS Services Ltd
 24703	Sven Meyer IT-Services
-24704	Informatikzentrum Landesverwaltung Baden-Württemberg
+24704	Landesoberbehoerde IT Baden-Wuerttemberg (BITBW)	# formerly 'Informatikzentrum Landesverwaltung Baden-Württemberg'
 24705	Clal Insurance Ltd
 24706	RW Consulting
 24707	Computation Systemhaus GmbH
@@ -25890,7 +25890,7 @@
 26045	Wright Patman Congressional Federal Credit Union
 26046	interActive Systems GmbH
 26047	Fritzinger IT-Consult
-26048	Mo-Sys Ltd
+26048	Mo-Sys Engineering Ltd
 26049	Open WWWorks
 26050	Ecole Centrale de Marseille
 26051	Retep Software
@@ -27585,7 +27585,7 @@
 27740	ADFC LV Berlin e.V.
 27741	AAA Carolinas
 27742	Flying Horse Studios
-27743	Shaney
+27743	Daftano	# formerly 'Shaney'
 27744	Majik Networks Inc.
 27745	4Step Ltd.
 27746	The institute of science and technology
@@ -27776,7 +27776,7 @@
 27931	GFI Italia SpA
 27932	LignUp Corporation
 27933	NOVOTECNO, S.L.
-27934	Computer Science Club
+27934	Computer Science Club of the University of Waterloo
 27935	Sigil.org
 27936	PD-House
 27937	UTNOXIUM SL
@@ -42808,7 +42808,7 @@
 42982	Leafsprout
 42983	SAS Nexylan
 42984	Toyohashi University of Technology
-42985	Cnofe
+42985	Bdog Technology	# formerly 'Cnofe'
 42986	Beijing MicroColor Corp., LTD.
 42987	Gida Technology Services
 42988	Nanjing Huamai Technology Co., Ltd
@@ -43935,7 +43935,7 @@
 44109	FAA National Airspace Systems
 44110	Nowa Era Sp. z o.o.
 44111	Guangzhou Younghead Electronic Technology Co.,Ltd
-44112	Rabobank International
+44112	Coöperatieve Rabobank U.A.
 44113	Villeroy & Boch AG
 44114	RealVNC Ltd
 44115	Height8 Technologies Pvt. Ltd
@@ -45301,7 +45301,7 @@
 45477	ZOO Digital Group plc.
 45478	DIVA IT SIA
 45479	PXP Solutions Ltd
-45480	Packetwerk GmbH
+45480	cognitix GmbH	# formerly 'Packetwerk GmbH'
 45481	Galore Networks Private Limited
 45482	St Jude Medical
 45483	FusionLayer, Inc.
@@ -45705,7 +45705,7 @@
 45881	2Lconsult
 45882	Global Voice Group, S.A.
 45883	EagleBurgmann Germany GmbH & Co. KG
-45884	AuthClub Inc
+45884	ScaleFT Inc	# formerly 'AuthClub Inc'
 45885	Cesbo Ltd.
 45886	Connect-Omsk, Ltd.
 45887	Arke Telekom Ltd. Sti.
@@ -49647,7 +49647,7 @@
 49827	Digital imaging
 49828	City of York Council
 49829	VTTEK - Viettel Group
-49830	eDoc Group
+49830	eDoc Group - Tiers de Confiance
 49831	Expression Networks LLC
 49832	Nero Blanco IT Ltd
 49833	Sierra View Medical Center
@@ -49914,8 +49914,6 @@
 50094	SEC 1.01 AG
 50095	Private-Network.com, Inc.
 50096	Scoop Publishing Limited
-50097	SCA Östrand
-50098	SCA Graphic Sundsvall Aktiebolag
 50099	PRZEDSIĘBIORSTWO WIELOBRANŻOWE DMS BOGDAN DARZECKI MAREK MAŚLANKA S.C.
 50100	energy & meteo systems GmbH
 50101	NEOCHROM, ltd
@@ -50518,3 +50516,288 @@
 50698	North Central Texas Council of Governments
 50699	ASiO
 50700	Ulrich Busch
+50701	PI SYSTEM co.,ltd.
+50702	DIEHL Informatik GmbH
+50703	Acteon Group Limited
+50704	star.Energiewerke GmbH & Co. KG
+50705	NPAW (Nice People At Work)
+50706	Fiducia & GAD IT AG
+50707	Nextragen Solutions GmbH
+50708	Point Core SAS
+50709	JJIM.de Network Exploration Task-Force
+50710	zhaoqing medical college
+50711	Goldberg & Mathew Medical associates
+50712	Connexys
+50713	KT IT Planning Group
+50714	Jones Lang LaSalle IP, Inc.
+50715	Bluink Ltd
+50716	Huaqin Telecom Technology Co.,Ltd.
+50717	FTI "ROSTRANSMODERNIZATSIYA"
+50718	BPO Advisors SpA
+50719	RNLI
+50720	Hawaii Oncology, Inc.
+50721	St Marys Oncology Center, LLC
+50722	Practice Provider Corporation
+50723	RF Solutions LLC
+50724	Iowa Student Loan
+50725	ROCAS SI
+50726	Tekon-Avtomatika
+50727	Civil Aviation University of China
+50728	Nemon
+50729	Stichting Groningen Groningen Declaration Network
+50730	TELCAT MULTICOM GmbH
+50731	NAES Corporation
+50732	HIAG Data
+50733	bluebyteIT Sven Treiber
+50734	HHGL Limited
+50735	Vricon Systems
+50736	Axcella, LLC
+50737	Chaitin Tech
+50738	HomeLABs
+50739	lmu
+50740	AIRSYS GmbH
+50741	Dust Devil Hosting, LLP
+50742	Optus Yes Lab
+50743	nihon communication solutions
+50744	Max Bögl Bauservice GmbH & Co.KG
+50745	GRDF
+50746	Bank of Namibia
+50747	Vastec
+50748	iRobot Corporation
+50749	Avantix
+50750	AEGIDE
+50751	FIDUMTEC
+50752	Delta Constructors
+50753	Siljan Timber  AB
+50754	Blyberg Timber AB
+50755	Siljan Energi AB
+50756	D. A. Taylor Consulting LLC
+50757	Singapore Technologies Electronics Ltd
+50758	All My Papers
+50759	MAVOCO GmbH
+50760	CELPRAM
+50761	von Stockhausen
+50762	mühlbauer + partner Technische Dokumentation GmbH & Co. KG
+50763	Loca Images
+50764	Genuinous
+50765	Toyota Connected, Inc.
+50766	Mennonite Central Committee Ontario
+50767	PrecisionWave AG
+50768	TECHNOKEY SAS
+50769	Communication Devices Inc.
+50770	TQ Systems GmbH
+50771	B&A Technology Co., Ltd
+50772	GeissNET
+50773	Stored Value Cards, Inc.
+50774	Lessbroken Internet Services
+50775	MeSince Technology Limited
+50776	System V,Inc.
+50777	Stenvalls Trä AB
+50778	Edwin Lankamp Consulting
+50779	Zombie Orrpheus Entertainment LLC
+50780	MacEwan University
+50781	Gradient Technologies, LLC
+50782	Cumulus Systems, Inc.
+50783	Traxens
+50784	GIDURAL, Ltd.
+50785	Knowcell
+50786	Gemological Institute of America
+50787	Thales UK Ltd
+50788	German-Jordanian University
+50789	Sentaca
+50790	Synforma Ltd.
+50791	Redtea Technology (Shanghai) Co., LTD
+50792	Genetus Inc.
+50793	Compulsory inforcement bureau under the Prosecutor general's office of the repoblic of Uzbekistan state unitary enterprise "Centr on electronic online auctions organization"
+50794	HelloMouse
+50795	HENSOLDT Sensors GmbH
+50796	Clienia Management AG
+50797	Salzgitter AG
+50798	Aporeto Inc.
+50799	Uet
+50800	Domanski Zakrzewski Palinka sp. k.
+50801	cqcatr 重庆信息通信研究院 (Chongqing Information and Communication Research Institute)
+50802	556607-9975
+50803	LOGETEL
+50804	SABEN
+50805	nexVortex
+50806	DataBang S.P.R.L.
+50807	Eaglepix Systems LLC
+50808	Veridian Credit Union
+50809	Newcontact
+50810	Stacc AS
+50811	Adel System S.r.l.
+50812	Mediaset España
+50813	Quesive GmbH
+50814	Faculty of Medicine Comenius University
+50815	Agman Holdings Limited
+50816	Telsat
+50817	Jazz Networks Limited
+50818	Hochschulbibliothekszentrum NRW
+50819	Medialis
+50820	Niche Finder
+50821	Eurovibes
+50822	Gospel Technology Ltd
+50823	Inner Expanse LLC
+50824	Central Valley Cancer Center
+50825	RTRJ Tecnologia (T. E. N. Reis Servicos De Informatica - ME)
+50826	Mediso Art s.r.o.
+50827	Needswell Inc.
+50828	Fujian Taili Communication.,Ltd.
+50829	Mount Zion School
+50830	VECTIGALIS d.o.o.
+50831	PATA SIA
+50832	Teratac (Pty) Ltd.
+50833	Bank-Verlag GmbH
+50834	Zavod No. 423 LLC
+50835	Erhardt-IT
+50836	Pontchartrain Cancer Center
+50837	Parsec Labs LLC
+50838	Structura Technology & Innovation s.r.l.
+50839	SkyLab Innogram Pte. Ltd.
+50840	Intercoax Co., Ltd
+50841	Qcera, Inc.
+50842	Infralinc, LLC
+50843	Seychelles Tourism Board
+50844	Impervious Technologies LLC
+50845	RAFFCOM TECHNOLOGIES SDN BHD
+50846	EXASOL AG
+50847	Original Telco Solutions limited
+50848	Innflow AG
+50849	VSV Frakt AB
+50850	SnowOncard
+50851	Gnome Rock
+50852	LECIP SLP CORPORATION
+50853	BERTIN IT
+50854	Communics Systemhaus GmbH
+50855	Block Center for Integrative Cancer Treatment
+50856	Pacific Battleship Center
+50857	DENSO SOLUTIONS CO.,LTD.
+50858	Shasta County Office of Education
+50859	Hendrik Dilling
+50860	BIOT sp. z o.o.
+50861	Stadtverwaltung Herzogenaurach
+50862	Hotspring Ventures Ltd
+50863	Figment Design Laboratories (Pty) Ltd
+50864	GLIWA GmbH
+50865	ilah
+50866	ELVA-1 MICROWAVE HANDELSBOLAG
+50867	KPMG Nunwood
+50868	Signamax
+50869	BASoft
+50870	Jieti Technology Co., Ltd
+50871	dyna bcs Informatik GmbH
+50872	Progeny System Corp. (PAX River Office)
+50873	Levi Strauss & Co.
+50874	Cowan & Associates, Inc.
+50875	Slovenske železnice d.o.o.
+50876	GESAN srl
+50877	Balluff GmbH
+50878	Creativity Software
+50879	Walgreens Boots Alliance Services Limited
+50880	Quantus Information Technologies
+50881	PrimeCert Ltd
+50882	Caleo Technologies AB
+50883	tolltickets GmbH
+50884	Nochta, Inc.
+50885	King Abdulaziz Center for World Culture
+50886	Chengdu Saturn Technology Co., Ltd.
+50887	RailNetEurope
+50888	Telcoserv
+50889	Buerotechnik Haustein
+50890	Olimpia Management S.A.
+50891	T.CON GmbH & Co. KG
+50892	Ivy Tech Community College - Lifelong Learning - Bedford
+50893	Ethica Data
+50894	RF Creations
+50895	Kajeet Inc.
+50896	LEAF
+50897	Islamic College of Brisbane
+50898	Comtrol Private Limited
+50899	The Steamship Authority
+50900	ALTE OLDENBURGER Krankenversicherung AG
+50901	OBT AG
+50902	Stadt Nuertingen
+50903	ASOCS
+50904	Kemberton Healthcare Services
+50905	Zyrenth
+50906	mediainvent Service GmbH
+50907	Lowe-Martin Company Inc.
+50908	Mystery Ranch Ltd.
+50909	Quick Soft Tecnologia da Informação
+50910	Trusted Shops GmbH
+50911	NSS TECHNOLOGY LIMITED
+50912	Multipart Labs
+50913	Ponte Technologies Ltd
+50914	Cyberstack Limited
+50915	Lacroix Traffic
+50916	IMDEA Software
+50917	Berufsförderungswerk Leipzig gGmbH
+50918	KBR GmbH
+50919	KONICA MINOLTA, INC.
+50920	Harold Masenya
+50921	DPS Electronics, Inc.
+50922	bdcj
+50923	DHBW Heilbronn
+50924	NthPermutation Security
+50925	Advance Financial
+50926	Farmers Bank & Trust Co.
+50927	Tapestry Solutions, Inc.
+50928	Ambu A/S
+50929	AS Globitex Holding
+50930	ZhenSen Optical Communication
+50931	Onlearn-tech kft
+50932	Sensio AS
+50933	Szkoła Podstawowa im. Kornela Makuszyńskiego w Giewartowie
+50934	Erre Elle Net s.r.l.
+50935	Oneida Health System
+50936	TV2 Consulting
+50937	Epic Networks S.r.l.
+50938	Apprenda Inc
+50939	Magic Leap, Inc
+50940	SMARTNES S.r.l.s.
+50941	Nocsys
+50942	Tubbesing Services
+50943	BelWü-Koordination
+50944	Deutsche Telekom AG Innovation Laboratories
+50945	Lamb Weston Belaya Dacha
+50946	Restaurant Brands International
+50947	Shanghai Gotell Communication Technology Holdings Co., Ltd.
+50948	BlockArray
+50949	Varner Retail AS
+50950	ARVAL
+50951	Manx Telecom IT
+50952	Dimetor GmbH
+50953	BluVector INC
+50954	Sportcast GmbH
+50955	comcrypto GmbH
+50956	Health & Social Care Northern Ireland
+50957	Southwest electrolic research institute of China
+50958	Idax Solutions Ltd
+50959	becrafted
+50960	Advanced Datacentre Systems Ltd
+50961	Gateway TechnoLabs
+50962	Computition
+50963	HalloWelt! GmbH
+50964	Funko
+50965	DANUBE SOFT s. r. o.
+50966	Softbridge Technology
+50967	China Electronics Technology Instruments CO.,LTD The 40th &41st Institute of CETC
+50968	Virtuozzo
+50969	ENTESC SRL
+50970	AerojetRocketdyne
+50971	Beijing Metstar Radar Com. LTD.
+50972	Micronisus Technonologies Pvt. Ltd.
+50973	Vengeful Syndicate
+50974	R2P GmbH
+50975	Tricolorvision
+50976	Medtronic CRHF
+50977	eMudhra Technologies Limited
+50978	DareNET
+50979	Radnor Township School District
+50980	PJSC "TGC-2"
+50981	Gartenmann Software AG
+50982	Viken Skog SA
+50983	BAUR GesmbH
+50984	Stuff In A Plug
+50985	Navigate IT Services GmbH

@@ -238,6 +238,11 @@ Function .onInit
     ; Get the Windows version
     ${GetWindowsVersion} $R0
 
+    ; This should match the following:
+    ; - The NTDDI_VERSION and _WIN32_WINNT parts of cmakeconfig.h.in
+    ; - The <compatibility><application> section in image\wireshark.exe.manifest.in
+    ; - The VersionNT parts of packaging\wix\Prerequisites.wxi
+
     ; Uncomment to test.
     ; MessageBox MB_OK "You're running Windows $R0."
 
@@ -512,6 +517,7 @@ File "${STAGING_DIR}\diameter\eap.xml"
 File "${STAGING_DIR}\diameter\Ericsson.xml"
 File "${STAGING_DIR}\diameter\etsie2e4.xml"
 File "${STAGING_DIR}\diameter\HP.xml"
+File "${STAGING_DIR}\diameter\Huawei.xml"
 File "${STAGING_DIR}\diameter\Inovar.xml"
 File "${STAGING_DIR}\diameter\Juniper.xml"
 File "${STAGING_DIR}\diameter\mobileipv4.xml"
@@ -759,6 +765,9 @@ File "${STAGING_DIR}\dtds\xcap-error.dtd"
 File "${STAGING_DIR}\dtds\watcherinfo.dtd"
 SetOutPath $INSTDIR
 
+; Create the extcap directory
+CreateDirectory $INSTDIR\extcap
+
 ; Install the TPNCP DAT file in the "tpncp" subdirectory
 ; of the installation directory.
 SetOutPath $INSTDIR\tpncp
@@ -882,7 +891,6 @@ ${If} $0 == "0"
         ${EnableX64FSRedirection}
         SetRegView 32
     ${EndIf}
-    CreateDirectory $INSTDIR\extcap
     ${StrRep} $0 '$USBPCAP_UNINSTALL' 'Uninstall.exe' 'USBPcapCMD.exe'
     ${StrRep} $1 '$0' '"' ''
     CopyFiles  /SILENT $1 $INSTDIR\extcap
@@ -1007,38 +1015,37 @@ SectionGroup "Plugins & Extensions" SecPluginsGroup
 
 Section "Dissector Plugins" SecPlugins
 ;-------------------------------------------
-SetOutPath '$INSTDIR\plugins\${VERSION}'
-File "${STAGING_DIR}\plugins\docsis.dll"
-File "${STAGING_DIR}\plugins\ethercat.dll"
-File "${STAGING_DIR}\plugins\gryphon.dll"
-File "${STAGING_DIR}\plugins\irda.dll"
-File "${STAGING_DIR}\plugins\m2m.dll"
-File "${STAGING_DIR}\plugins\opcua.dll"
-File "${STAGING_DIR}\plugins\profinet.dll"
-File "${STAGING_DIR}\plugins\unistim.dll"
-File "${STAGING_DIR}\plugins\wimax.dll"
-File "${STAGING_DIR}\plugins\wimaxasncp.dll"
-File "${STAGING_DIR}\plugins\wimaxmacphy.dll"
+SetOutPath '$INSTDIR\plugins\${VERSION_MAJOR}.${VERSION_MINOR}'
+File "${STAGING_DIR}\plugins\${VERSION_MAJOR}.${VERSION_MINOR}\docsis.dll"
+File "${STAGING_DIR}\plugins\${VERSION_MAJOR}.${VERSION_MINOR}\ethercat.dll"
+File "${STAGING_DIR}\plugins\${VERSION_MAJOR}.${VERSION_MINOR}\gryphon.dll"
+File "${STAGING_DIR}\plugins\${VERSION_MAJOR}.${VERSION_MINOR}\irda.dll"
+File "${STAGING_DIR}\plugins\${VERSION_MAJOR}.${VERSION_MINOR}\opcua.dll"
+File "${STAGING_DIR}\plugins\${VERSION_MAJOR}.${VERSION_MINOR}\profinet.dll"
+File "${STAGING_DIR}\plugins\${VERSION_MAJOR}.${VERSION_MINOR}\unistim.dll"
+File "${STAGING_DIR}\plugins\${VERSION_MAJOR}.${VERSION_MINOR}\wimax.dll"
+File "${STAGING_DIR}\plugins\${VERSION_MAJOR}.${VERSION_MINOR}\wimaxasncp.dll"
+File "${STAGING_DIR}\plugins\${VERSION_MAJOR}.${VERSION_MINOR}\wimaxmacphy.dll"
 !include "custom_plugins.txt"
 SectionEnd
 
 Section "Tree Statistics Plugin" SecStatsTree
 ;-------------------------------------------
-SetOutPath '$INSTDIR\plugins\${VERSION}'
-File "${STAGING_DIR}\plugins\stats_tree.dll"
+SetOutPath '$INSTDIR\plugins\${VERSION_MAJOR}.${VERSION_MINOR}'
+File "${STAGING_DIR}\plugins\${VERSION_MAJOR}.${VERSION_MINOR}\stats_tree.dll"
 SectionEnd
 
 Section "Mate - Meta Analysis and Tracing Engine" SecMate
 ;-------------------------------------------
-SetOutPath '$INSTDIR\plugins\${VERSION}'
-File "${STAGING_DIR}\plugins\mate.dll"
+SetOutPath '$INSTDIR\plugins\${VERSION_MAJOR}.${VERSION_MINOR}'
+File "${STAGING_DIR}\plugins\${VERSION_MAJOR}.${VERSION_MINOR}\mate.dll"
 SectionEnd
 
 
 Section "TRANSUM - network and application performance analysis" SecTransum
 ;-------------------------------------------
-SetOutPath '$INSTDIR\plugins\${VERSION}'
-File "${STAGING_DIR}\plugins\transum.dll"
+SetOutPath '$INSTDIR\plugins\${VERSION_MAJOR}.${VERSION_MINOR}'
+File "${STAGING_DIR}\plugins\${VERSION_MAJOR}.${VERSION_MINOR}\transum.dll"
 SectionEnd
 
 Section "Configuration Profiles" SecProfiles

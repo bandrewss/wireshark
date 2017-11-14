@@ -3815,6 +3815,7 @@ smartcard-tls	4116/tcp/udp	# smartcard-TLS
 hillrserv	4117/tcp/udp	# Hillr Connection Manager
 netscript	4118/tcp/udp	# Netadmin Systems NETscript service
 assuria-slm	4119/tcp/udp	# Assuria Log Manager
+minirem		4120/tcp	# MiniRem Remote Telemetry and Control
 e-builder	4121/tcp/udp	# e-Builder Application Communication
 fprams		4122/tcp/udp	# Fiber Patrol Alarm Service
 z-wave		4123/tcp/udp	# Z-Wave Protocol
@@ -5358,6 +5359,7 @@ fio-cmgmt	9051/tcp	# Fusion-io Central Manager Service
 CardWeb-IO	9060/tcp	# CardWeb request-response I/O exchange
 CardWeb-RT	9060/udp	# CardWeb realtime device data
 glrpc		9080/tcp/udp	# Groove GLRPC
+cisco-aqos	9081/udp	# Required for Adaptive Quality of Service
 lcs-ap		9082/sctp	# LCS Application Protocol
 emc-pp-mgmtsvc	9083/tcp	# EMC PowerPath Mgmt Service
 aurora		9084/tcp/udp/sctp	# IBM AURORA Performance Visualizer
@@ -6129,3 +6131,4 @@ robotraconteur	48653/tcp/udp	# Robot Raconteur transport
 matahari	49000/tcp	# Matahari Broker
 nusrp		49001/tcp	# Nuance Unity Service Request Protocol
 nusdp-disc	49001/udp	# Nuance Unity Service Discovery Protocol
+inspider	49150/tcp	# InSpider System

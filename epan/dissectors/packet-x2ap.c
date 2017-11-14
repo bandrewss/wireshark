@@ -140,6 +140,7 @@ typedef enum _ProtocolIE_ID_enum {
   id_Cause     =   5,
   id_CellInformation =   6,
   id_CellInformation_Item =   7,
+  id_Unknown_8 =   8,
   id_New_eNB_UE_X2AP_ID =   9,
   id_Old_eNB_UE_X2AP_ID =  10,
   id_TargetCell_ID =  11,
@@ -204,6 +205,7 @@ typedef enum _ProtocolIE_ID_enum {
   id_CSG_Id    =  70,
   id_CSGMembershipStatus =  71,
   id_MDTConfiguration =  72,
+  id_Unknown_73 =  73,
   id_ManagementBasedMDTallowed =  74,
   id_RRCConnSetupIndicator =  75,
   id_NeighbourTAC =  76,
@@ -274,6 +276,7 @@ typedef enum _ProtocolIE_ID_enum {
   id_E_RABs_SubjectToCounterCheck_List = 141,
   id_E_RABs_SubjectToCounterCheckItem = 142,
   id_CoverageModificationList = 143,
+  id_Unknown_144 = 144,
   id_ReportingPeriodicityCSIR = 145,
   id_CSIReportList = 146,
   id_UEID      = 147,
@@ -1485,6 +1488,7 @@ static const value_string x2ap_ProtocolIE_ID_vals[] = {
   { id_Cause, "id-Cause" },
   { id_CellInformation, "id-CellInformation" },
   { id_CellInformation_Item, "id-CellInformation-Item" },
+  { id_Unknown_8, "id-Unknown-8" },
   { id_New_eNB_UE_X2AP_ID, "id-New-eNB-UE-X2AP-ID" },
   { id_Old_eNB_UE_X2AP_ID, "id-Old-eNB-UE-X2AP-ID" },
   { id_TargetCell_ID, "id-TargetCell-ID" },
@@ -1549,6 +1553,7 @@ static const value_string x2ap_ProtocolIE_ID_vals[] = {
   { id_CSG_Id, "id-CSG-Id" },
   { id_CSGMembershipStatus, "id-CSGMembershipStatus" },
   { id_MDTConfiguration, "id-MDTConfiguration" },
+  { id_Unknown_73, "id-Unknown-73" },
   { id_ManagementBasedMDTallowed, "id-ManagementBasedMDTallowed" },
   { id_RRCConnSetupIndicator, "id-RRCConnSetupIndicator" },
   { id_NeighbourTAC, "id-NeighbourTAC" },
@@ -1619,6 +1624,7 @@ static const value_string x2ap_ProtocolIE_ID_vals[] = {
   { id_E_RABs_SubjectToCounterCheck_List, "id-E-RABs-SubjectToCounterCheck-List" },
   { id_E_RABs_SubjectToCounterCheckItem, "id-E-RABs-SubjectToCounterCheckItem" },
   { id_CoverageModificationList, "id-CoverageModificationList" },
+  { id_Unknown_144, "id-Unknown-144" },
   { id_ReportingPeriodicityCSIR, "id-ReportingPeriodicityCSIR" },
   { id_CSIReportList, "id-CSIReportList" },
   { id_UEID, "id-UEID" },
@@ -10896,35 +10902,35 @@ static int dissect_ProtocolIEFieldValue(tvbuff_t *tvb, packet_info *pinfo, proto
 {
   struct x2ap_private_data *x2ap_data = x2ap_get_private_data(pinfo);
 
-  return (dissector_try_uint(x2ap_ies_dissector_table, x2ap_data->protocol_ie_id, tvb, pinfo, tree)) ? tvb_captured_length(tvb) : 0;
+  return (dissector_try_uint_new(x2ap_ies_dissector_table, x2ap_data->protocol_ie_id, tvb, pinfo, tree, FALSE, NULL)) ? tvb_captured_length(tvb) : 0;
 }
 
 static int dissect_ProtocolExtensionFieldExtensionValue(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
   struct x2ap_private_data *x2ap_data = x2ap_get_private_data(pinfo);
 
-  return (dissector_try_uint(x2ap_extension_dissector_table, x2ap_data->protocol_ie_id, tvb, pinfo, tree)) ? tvb_captured_length(tvb) : 0;
+  return (dissector_try_uint_new(x2ap_extension_dissector_table, x2ap_data->protocol_ie_id, tvb, pinfo, tree, FALSE, NULL)) ? tvb_captured_length(tvb) : 0;
 }
 
 static int dissect_InitiatingMessageValue(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
   struct x2ap_private_data *x2ap_data = x2ap_get_private_data(pinfo);
 
-  return (dissector_try_uint(x2ap_proc_imsg_dissector_table, x2ap_data->procedure_code, tvb, pinfo, tree)) ? tvb_captured_length(tvb) : 0;
+  return (dissector_try_uint_new(x2ap_proc_imsg_dissector_table, x2ap_data->procedure_code, tvb, pinfo, tree, FALSE, NULL)) ? tvb_captured_length(tvb) : 0;
 }
 
 static int dissect_SuccessfulOutcomeValue(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
   struct x2ap_private_data *x2ap_data = x2ap_get_private_data(pinfo);
 
-  return (dissector_try_uint(x2ap_proc_sout_dissector_table, x2ap_data->procedure_code, tvb, pinfo, tree)) ? tvb_captured_length(tvb) : 0;
+  return (dissector_try_uint_new(x2ap_proc_sout_dissector_table, x2ap_data->procedure_code, tvb, pinfo, tree, FALSE, NULL)) ? tvb_captured_length(tvb) : 0;
 }
 
 static int dissect_UnsuccessfulOutcomeValue(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void *data _U_)
 {
   struct x2ap_private_data *x2ap_data = x2ap_get_private_data(pinfo);
 
-  return (dissector_try_uint(x2ap_proc_uout_dissector_table, x2ap_data->procedure_code, tvb, pinfo, tree)) ? tvb_captured_length(tvb) : 0;
+  return (dissector_try_uint_new(x2ap_proc_uout_dissector_table, x2ap_data->procedure_code, tvb, pinfo, tree, FALSE, NULL)) ? tvb_captured_length(tvb) : 0;
 }
 
 static int

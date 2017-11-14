@@ -3,6 +3,7 @@
  * Routines to Dissect Appendix C TLV's
  * Copyright 2015, Adrian Simionov <daniel.simionov@gmail.com>
  * Copyright 2002, Anand V. Narwani <anand[AT]narwani.org>
+ * Copyright 2017, Bruno Verstuyft <bruno.verstuyft@excentis.com>
  *
  * Wireshark - Network traffic analyzer
  * By Gerald Combs <gerald@wireshark.org>
@@ -170,7 +171,10 @@ static int hf_docsis_tlv_mcap_map_ucd = -1;
 static int hf_docsis_tlv_mcap_udc = -1;
 static int hf_docsis_tlv_mcap_ipv6 = -1;
 static int hf_docsis_tlv_mcap_ext_us_trans_power = -1;
-
+static int hf_docsis_tlv_mcap_em = -1;
+static int hf_docsis_tlv_mcap_em_1x1 = -1;
+static int hf_docsis_tlv_mcap_em_light_sleep = -1;
+static int hf_docsis_tlv_mcap_cm_status_ack = -1;
 
 static int hf_docsis_tlv_clsfr_ref = -1;
 static int hf_docsis_tlv_clsfr_id = -1;
@@ -201,6 +205,16 @@ static int hf_docsis_tlv_ipclsfr_sport_end = -1;
 static int hf_docsis_tlv_ipclsfr_dport_start = -1;
 static int hf_docsis_tlv_ipclsfr_dport_end = -1;
 
+static int hf_docsis_tlv_ip6clsfr_tc_low = -1;
+static int hf_docsis_tlv_ip6clsfr_tc_high = -1;
+static int hf_docsis_tlv_ip6clsfr_tc_mask = -1;
+static int hf_docsis_tlv_ip6clsfr_flow_label = -1;
+static int hf_docsis_tlv_ip6clsfr_next_header = -1;
+static int hf_docsis_tlv_ip6clsfr_src = -1;
+static int hf_docsis_tlv_ip6clsfr_src_prefix_length = -1;
+static int hf_docsis_tlv_ip6clsfr_dst = -1;
+static int hf_docsis_tlv_ip6clsfr_dst_prefix_length = -1;
+
 static int hf_docsis_tlv_ethclsfr_dmac = -1;
 static int hf_docsis_tlv_ethclsfr_smac = -1;
 static int hf_docsis_tlv_ethclsfr_ethertype = -1;
@@ -222,6 +236,9 @@ static int hf_docsis_tlv_sflow_min_traf = -1;
 static int hf_docsis_tlv_sflow_ass_min_pkt_size = -1;
 static int hf_docsis_tlv_sflow_timeout_active = -1;
 static int hf_docsis_tlv_sflow_timeout_admitted = -1;
+static int hf_docsis_tlv_sflow_req_attr_mask = -1;
+static int hf_docsis_tlv_sflow_forb_attr_mask = -1;
+static int hf_docsis_tlv_sflow_attr_aggr_rule_mask = -1;
 static int hf_docsis_tlv_sflow_vendor_spec = -1;
 static int hf_docsis_tlv_sflow_max_concat_burst = -1;
 static int hf_docsis_tlv_sflow_sched_type = -1;
@@ -391,12 +408,17 @@ static int hf_docsis_ch_asgn_rx_freq = -1;
 static int hf_docsis_cmts_mc_sess_enc_grp = -1;
 static int hf_docsis_cmts_mc_sess_enc_src = -1;
 
+static int hf_docsis_tlv_unknown = -1;
+
 /* Initialize the subtree pointers */
 static gint ett_docsis_tlv = -1;
 static gint ett_docsis_tlv_cos = -1;
 static gint ett_docsis_tlv_mcap = -1;
+static gint ett_docsis_tlv_mcap_em = -1;
 static gint ett_docsis_tlv_clsfr = -1;
 static gint ett_docsis_tlv_clsfr_ip = -1;
+static gint ett_docsis_tlv_clsfr_ip6 = -1;
+static gint ett_docsis_tlv_clsfr_ip6_tc = -1;
 static gint ett_docsis_tlv_clsfr_eth = -1;
 static gint ett_docsis_tlv_clsfr_err = -1;
 static gint ett_docsis_tlv_phs = -1;
@@ -450,6 +472,17 @@ static const value_string on_off_vals[] = {
 static const true_false_string ena_dis_tfs = {
   "Enable",
   "Disable"
+};
+
+static const value_string sup_unsup_vals[] = {
+  {0, "Unsupported"},
+  {1, "Supported"},
+  {0, NULL},
+};
+
+static const true_false_string sup_unsup_tfs = {
+  "Supported",
+  "Unsupported"
 };
 
 static const value_string docs_ver_vals[] = {
@@ -624,6 +657,19 @@ const value_string docsis_conf_code[] = {
 
 value_string_ext docsis_conf_code_ext = VALUE_STRING_EXT_INIT(docsis_conf_code);
 
+static const value_string next_header_vals[] = {
+  {0, "Hop-by-Hop"},
+  {60, "Destination"},
+  {43, "Routing"},
+  {44, "Fragment"},
+  {51, "Authentication"},
+  {50, "Encapsulation"},
+  {59, "No"},
+  {256, "All IPv6 Traffic"},
+  {257, "All UDP and TCP Traffic"},
+  {0, NULL},
+};
+
 static const value_string us_ch_action_vals[] = {
   {0, "No Action"},
   {1, "Add"},
@@ -761,6 +807,9 @@ dissect_phs_err (tvbuff_t * tvb, packet_info *pinfo, proto_tree * tree, int star
             proto_tree_add_item (err_tree, hf_docsis_tlv_phs_err_msg, tvb, pos,
                                  length, ENC_ASCII|ENC_NA);
             break;
+          default:
+            proto_tree_add_item (err_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
 
@@ -888,6 +937,9 @@ dissect_phs (tvbuff_t * tvb, packet_info *pinfo, proto_tree * tree, int start, g
             proto_tree_add_item (phs_tree, hf_docsis_tlv_phs_vendorspec, tvb,
                                  pos, length, ENC_NA);
             break;
+          default:
+            proto_tree_add_item (phs_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
 
@@ -961,6 +1013,9 @@ dissect_sflow_err (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree, int st
             proto_tree_add_item (err_tree, hf_docsis_tlv_sflow_err_msg, tvb,
                                  pos, length, ENC_ASCII|ENC_NA);
             break;
+          default:
+            proto_tree_add_item (err_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
 
@@ -991,6 +1046,9 @@ dissect_downstream_sflow (tvbuff_t * tvb, packet_info* pinfo, proto_tree * sflow
             {
               expert_add_info_format(pinfo, sflow_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
             }
+          break;
+        default:
+          proto_tree_add_item (sflow_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
           break;
         }                       /* switch */
       pos = pos + length;
@@ -1132,7 +1190,9 @@ dissect_upstream_sflow (tvbuff_t * tvb, packet_info* pinfo, proto_tree * sflow_t
                 expert_add_info_format(pinfo, sflow_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
             break;
-
+          default:
+            proto_tree_add_item (sflow_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
 
@@ -1296,6 +1356,43 @@ dissect_sflow (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree, int start,
                 expert_add_info_format(pinfo, sflow_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
             break;
+          case SFW_REQUIRED_ATTRIBUTE_MASK:
+            if (length == 4)
+              {
+                proto_tree_add_item (sflow_tree,
+                                     hf_docsis_tlv_sflow_req_attr_mask, tvb,
+                                     pos, length, ENC_NA);
+              }
+            else
+              {
+                expert_add_info_format(pinfo, sflow_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
+
+              }
+            break;
+          case SFW_FORBIDDEN_ATTRIBUTE_MASK:
+            if (length == 4)
+              {
+                proto_tree_add_item (sflow_tree,
+                                     hf_docsis_tlv_sflow_forb_attr_mask, tvb,
+                                     pos, length, ENC_NA);
+              }
+            else
+              {
+                expert_add_info_format(pinfo, sflow_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
+              }
+            break;
+          case SFW_ATTRIBUTE_AGGREGATION_RULE_MASK:
+            if (length == 4)
+              {
+                proto_tree_add_item (sflow_tree,
+                                     hf_docsis_tlv_sflow_attr_aggr_rule_mask, tvb,
+                                     pos, length, ENC_NA);
+              }
+            else
+              {
+                expert_add_info_format(pinfo, sflow_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
+              }
+            break;
           case SFW_VENDOR_SPEC:
             proto_tree_add_item (sflow_tree, hf_docsis_tlv_sflow_vendor_spec,
                                  tvb, pos, length, ENC_NA);
@@ -1361,6 +1458,9 @@ dissect_dot1q_clsfr (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree, int 
                                  hf_docsis_tlv_dot1qclsfr_vendorspec, tvb, pos,
                                  length, ENC_NA);
             break;
+          default:
+            proto_tree_add_item (dot1qclsfr_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
 
@@ -1420,6 +1520,9 @@ dissect_eth_clsfr (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree, int st
                 expert_add_info_format(pinfo, ethclsfr_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
             break;
+          default:
+            proto_tree_add_item (ethclsfr_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
 
@@ -1475,6 +1578,9 @@ dissect_clsfr_err (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree, int st
           case CFR_ERR_MSG:
             proto_tree_add_item (err_tree, hf_docsis_tlv_clsfr_err_msg, tvb,
                                  pos, length, ENC_ASCII|ENC_NA);
+            break;
+          default:
+            proto_tree_add_item (err_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -1619,9 +1725,138 @@ dissect_ip_classifier (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree, in
                 expert_add_info_format(pinfo, ipclsfr_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
             break;
+          default:
+            proto_tree_add_item (ipclsfr_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
 
+    }                           /* while */
+}
+
+static void
+dissect_ip6_classifier_tc (tvbuff_t * tvb, proto_tree * tree, int start,
+                       guint16 len)
+{
+  proto_tree *ip6clsfr_tc_tree;
+  proto_tree *ip6clsfr_tc_item;
+
+  ip6clsfr_tc_tree = proto_tree_add_subtree_format(tree, tvb, start, len, ett_docsis_tlv_clsfr_ip6_tc, &ip6clsfr_tc_item,
+                                "..1 IPv6 Traffic Class Range and Mask");
+
+  proto_tree_add_item(ip6clsfr_tc_tree, hf_docsis_tlv_ip6clsfr_tc_low, tvb, start, 1, ENC_BIG_ENDIAN);
+  proto_tree_add_item(ip6clsfr_tc_tree, hf_docsis_tlv_ip6clsfr_tc_high, tvb, start + 1, 1, ENC_BIG_ENDIAN);
+  proto_tree_add_item(ip6clsfr_tc_tree, hf_docsis_tlv_ip6clsfr_tc_mask, tvb, start + 2, 1, ENC_BIG_ENDIAN);
+
+}
+
+static void
+dissect_ip6_classifier (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree, int start,
+                       guint16 len)
+{
+  guint8 type, length;
+  proto_tree *ip6clsfr_tree;
+  proto_tree *ip6clsfr_item;
+  int pos = start;
+
+
+  ip6clsfr_tree =
+    proto_tree_add_subtree_format(tree, tvb, start, len, ett_docsis_tlv_clsfr_ip6, &ip6clsfr_item,
+                                  ".12 IPv6 Classifier (Length = %u)", len);
+
+  while (pos < (start + len))
+    {
+      type = tvb_get_guint8 (tvb, pos++);
+      length = tvb_get_guint8 (tvb, pos++);
+      switch (type)
+        {
+          case CFR_IP6_TRAFFIC_CLASS:
+            if (length == 3)
+              {
+                dissect_ip6_classifier_tc(tvb, ip6clsfr_tree, pos, length);
+              }
+            else
+              {
+                expert_add_info_format(pinfo, ip6clsfr_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
+              }
+            break;
+          case CFR_IP6_FLOW_LABEL:
+            if (length == 4)
+              {
+                proto_tree_add_item (ip6clsfr_tree,
+                                     hf_docsis_tlv_ip6clsfr_flow_label, tvb, pos,
+                                     length, ENC_BIG_ENDIAN);
+              }
+            else
+              {
+                expert_add_info_format(pinfo, ip6clsfr_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
+              }
+            break;
+          case CFR_IP6_NEXT_HEADER:
+            if (length == 2)
+              {
+                proto_tree_add_item (ip6clsfr_tree,
+                                     hf_docsis_tlv_ip6clsfr_next_header, tvb, pos,
+                                     length, ENC_BIG_ENDIAN);
+              }
+            else
+              {
+                expert_add_info_format(pinfo, ip6clsfr_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
+              }
+            break;
+          case CFR_IP6_SOURCE_ADDR:
+            if (length == 16)
+              {
+                proto_tree_add_item (ip6clsfr_tree,
+                                     hf_docsis_tlv_ip6clsfr_src, tvb, pos,
+                                     length, ENC_NA);
+              }
+            else
+              {
+                expert_add_info_format(pinfo, ip6clsfr_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
+              }
+            break;
+          case CFR_IP6_SOURCE_PREFIX_LENGTH:
+            if (length == 1)
+              {
+                proto_tree_add_item (ip6clsfr_tree,
+                                     hf_docsis_tlv_ip6clsfr_src_prefix_length, tvb, pos,
+                                     length, ENC_BIG_ENDIAN);
+              }
+            else
+              {
+                expert_add_info_format(pinfo, ip6clsfr_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
+              }
+            break;
+          case CFR_IP6_DESTINATION_ADDR:
+            if (length == 16)
+              {
+                proto_tree_add_item (ip6clsfr_tree,
+                                     hf_docsis_tlv_ip6clsfr_dst, tvb, pos,
+                                     length, ENC_NA);
+              }
+            else
+              {
+                expert_add_info_format(pinfo, ip6clsfr_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
+              }
+            break;
+          case CFR_IP6_DESTINATION_PREFIX_LENGTH:
+            if (length == 1)
+              {
+                proto_tree_add_item (ip6clsfr_tree,
+                                     hf_docsis_tlv_ip6clsfr_dst_prefix_length, tvb, pos,
+                                     length, ENC_BIG_ENDIAN);
+              }
+            else
+              {
+                expert_add_info_format(pinfo, ip6clsfr_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
+              }
+            break;
+          default:
+            proto_tree_add_item (ip6clsfr_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
+       }                       /* switch */
+       pos = pos + length;
     }                           /* while */
 }
 
@@ -1736,6 +1971,9 @@ dissect_classifiers (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree, int 
           case CFR_IP_CLASSIFIER:
             dissect_ip_classifier (tvb, pinfo, clsfr_tree, pos, length);
             break;
+          case CFR_IP6_CLASSIFIER:
+            dissect_ip6_classifier (tvb, pinfo, clsfr_tree, pos, length);
+            break;
           case CFR_ETH_CLASSIFIER:
             dissect_eth_clsfr (tvb, pinfo, clsfr_tree, pos, length);
             break;
@@ -1745,6 +1983,9 @@ dissect_classifiers (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree, int 
           case CFR_VENDOR_SPEC:
             proto_tree_add_item (clsfr_tree, hf_docsis_tlv_clsfr_vendor_spc,
                                  tvb, pos, length, ENC_NA);
+            break;
+          default:
+            proto_tree_add_item (clsfr_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -1792,6 +2033,9 @@ dissect_doc10cos (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree, int sta
               {
                 expert_add_info_format(pinfo, doc10cos_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
+            break;
+          default:
+            proto_tree_add_item (doc10cos_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -2258,6 +2502,36 @@ dissect_modemcap (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree, int sta
                 expert_add_info_format(pinfo, mcap_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
             break;
+          case CAP_EM:
+            if (length == 4)
+              {
+                static const int * cap_em[] = {
+                  &hf_docsis_tlv_mcap_em_1x1,
+                  &hf_docsis_tlv_mcap_em_light_sleep,
+                  NULL
+                };
+
+                proto_tree_add_bitmask_with_flags(mcap_tree, tvb, pos, hf_docsis_tlv_mcap_em, ett_docsis_tlv_mcap_em, cap_em, ENC_BIG_ENDIAN, BMT_NO_FLAGS);
+              }
+            else
+              {
+                expert_add_info_format(pinfo, mcap_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
+              }
+            break;
+          case CAP_CM_STATUS_ACK:
+            if (length == 1)
+              {
+                proto_tree_add_item (mcap_tree, hf_docsis_tlv_mcap_cm_status_ack, tvb,
+                                     pos, length, ENC_BIG_ENDIAN);
+              }
+            else
+              {
+                expert_add_info_format(pinfo, mcap_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
+              }
+            break;
+          default:
+            proto_tree_add_item (mcap_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch (type) */
       pos = pos + length;
     }                           /* while (pos < pos+len) */
@@ -2358,6 +2632,9 @@ dissect_cos (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree, int start, g
                 expert_add_info_format(pinfo, cos_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
             break;
+          default:
+            proto_tree_add_item (cos_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch (type) */
       pos = pos + length;
     }                           /* while (pos < pos+len) */
@@ -2412,6 +2689,9 @@ dissect_snmpv3_kickstart(tvbuff_t * tvb, proto_tree *tree, int start, guint16 le
                                  hf_docsis_tlv_snmpv3_kick_publicnum, tvb,
                                  pos, length, ENC_NA);
             break;
+          default:
+            proto_tree_add_item (snmpv3_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }  /* switch */
       pos += length;
     }   /* while */
@@ -2457,6 +2737,9 @@ dissect_ds_ch_list_single (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree
               {
                 expert_add_info_format(pinfo, single_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
+            break;
+          default:
+            proto_tree_add_item (single_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }  /* switch */
       pos = pos + length;
@@ -2526,6 +2809,9 @@ dissect_ds_ch_list_range (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree,
                 expert_add_info_format(pinfo, range_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
             break;
+          default:
+            proto_tree_add_item (range_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                           /* switch */
       pos = pos + length;
     }                             /* while */
@@ -2564,6 +2850,9 @@ dissect_dut_filter (tvbuff_t * tvb, packet_info* pinfo, proto_tree * tree,
           case DUT_CMIM:
             proto_tree_add_item (dut_tree, hf_docsis_tlv_dut_filter_cmim, tvb,
                                  pos, length, ENC_NA);
+            break;
+          default:
+            proto_tree_add_item (dut_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -2605,6 +2894,9 @@ dissect_ds_ch_list(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int sta
               {
                 expert_add_info_format(pinfo, dschlst_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
+            break;
+          default:
+            proto_tree_add_item (dschlst_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -2650,6 +2942,9 @@ dissect_tcc_err(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int start,
             proto_tree_add_item (tccerr_tree,
                                  hf_docsis_tcc_err_msg, tvb,
                                  pos, length, ENC_ASCII|ENC_NA);
+            break;
+          default:
+            proto_tree_add_item (tccerr_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -2734,6 +3029,9 @@ dissect_tcc_rng_parms(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int 
                 expert_add_info_format(pinfo, rngparm_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
             break;
+          default:
+            proto_tree_add_item (rngparm_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
     }                           /* while */
@@ -2805,6 +3103,9 @@ dissect_sid_cl_so_crit(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int
                 expert_add_info_format(pinfo, crit_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
             break;
+          default:
+            proto_tree_add_item (crit_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
     }                           /* while */
@@ -2864,6 +3165,9 @@ dissect_sid_cl_enc_map(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int
                 expert_add_info_format(pinfo, map_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
             break;
+          default:
+            proto_tree_add_item (map_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
     }                           /* while */
@@ -2905,6 +3209,9 @@ dissect_sid_cl_enc(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int sta
             else
               expert_add_info_format(pinfo, enc_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
             break;
+          default:
+            proto_tree_add_item (enc_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
     }                           /* while */
@@ -2945,6 +3252,9 @@ dissect_sid_cl(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int start, 
             break;
           case SID_CL_SO_CRIT:
             dissect_sid_cl_so_crit(tvb, pinfo, sid_tree, pos, length);
+            break;
+          default:
+            proto_tree_add_item (sid_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -3065,6 +3375,9 @@ dissect_tcc(tvbuff_t * tvb, packet_info * pinfo,
           case TLV_TCC_ERR:
             dissect_tcc_err(tvb, pinfo, tcc_tree, pos, length);
             break;
+          default:
+            proto_tree_add_item (tcc_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
     }                           /* while */
@@ -3111,6 +3424,9 @@ dissect_ch_bl_rng(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int star
               {
                 expert_add_info_format(pinfo, chblrng_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
+            break;
+          default:
+            proto_tree_add_item (chblrng_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -3177,6 +3493,9 @@ dissect_rcp_rcv_mod(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int st
                                  hf_docsis_rcv_mod_enc_phy_layr_parms, tvb, pos,
                                  length, ENC_NA);
             break;
+          default:
+            proto_tree_add_item (rcvmod_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
     }                           /* while */
@@ -3240,6 +3559,9 @@ dissect_rcp_rcv_ch(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int sta
               {
                 expert_add_info_format(pinfo, rcvch_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
+            break;
+          default:
+            proto_tree_add_item (rcvch_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -3313,6 +3635,9 @@ dissect_rcp(tvbuff_t * tvb, packet_info * pinfo,
             vsif_tvb = tvb_new_subset_length (tvb, pos, length);
             call_dissector (docsis_vsif_handle, vsif_tvb, pinfo, rcp_tree);
             break;
+          default:
+            proto_tree_add_item (rcp_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
     }                           /* while */
@@ -3364,6 +3689,9 @@ dissect_rcc_rcv_mod(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int st
             proto_tree_add_item (rcvmod_tree,
                                  hf_docsis_rcc_rcv_mod_enc_conn, tvb, pos,
                                  length, ENC_NA);
+            break;
+          default:
+            proto_tree_add_item (rcvmod_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -3428,6 +3756,9 @@ dissect_rcc_rcv_ch(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int sta
               {
                 expert_add_info_format(pinfo, rcvch_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
+            break;
+          default:
+            proto_tree_add_item (rcvch_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -3505,6 +3836,9 @@ dissect_rcc_err(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int start,
                                  hf_docsis_tlv_rcc_err_msg, tvb, pos,
                                  length, ENC_NA);
             break;
+          default:
+            proto_tree_add_item (err_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
     }                           /* while */
@@ -3554,6 +3888,9 @@ dissect_rcc(tvbuff_t * tvb, packet_info * pinfo,
             break;
           case TLV_RCC_ERR:
             dissect_rcc_err(tvb, pinfo, rcc_tree, pos, length);
+            break;
+          default:
+            proto_tree_add_item (rcc_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -3631,6 +3968,9 @@ dissect_dsid_ds_reseq(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int 
                 expert_add_info_format(pinfo, dsid_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
             break;
+          default:
+            proto_tree_add_item (dsid_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
     }                           /* while */
@@ -3678,6 +4018,9 @@ dissect_dsid_mc_addr(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int s
                 expert_add_info_format(pinfo, dsid_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
             break;
+         default:
+           proto_tree_add_item (dsid_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+           break;
         }                       /* switch */
       pos = pos + length;
     }                           /* while */
@@ -3715,6 +4058,9 @@ dissect_dsid_mc(tvbuff_t * tvb, packet_info *pinfo, proto_tree *tree, int start,
             break;
           case TLV_DSID_MC_PHS:
             dissect_phs(tvb, pinfo, dsid_tree, pos, length);
+            break;
+          default:
+            proto_tree_add_item (dsid_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -3769,6 +4115,9 @@ dissect_dsid(tvbuff_t * tvb, packet_info *pinfo, proto_tree *tree, int start, gu
           case TLV_DSID_MC:
             dissect_dsid_mc(tvb, pinfo, dsid_tree, pos, length);
             break;
+          default:
+            proto_tree_add_item (dsid_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
     }                           /* while */
@@ -3815,6 +4164,9 @@ dissect_sec_assoc(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int star
               {
                 expert_add_info_format(pinfo, sec_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
+            break;
+          default:
+            proto_tree_add_item (sec_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -3863,6 +4215,9 @@ dissect_ch_asgn(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, int start,
                 expert_add_info_format(pinfo, asgn_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
             break;
+          default:
+            proto_tree_add_item (asgn_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+            break;
         }                       /* switch */
       pos = pos + length;
     }                           /* while */
@@ -3909,6 +4264,9 @@ dissect_cmts_mc_sess_enc(tvbuff_t * tvb, packet_info* pinfo, proto_tree *tree, i
               {
                 expert_add_info_format(pinfo, mc_item, &ei_docsis_tlv_tlvlen_bad, "Wrong TLV length: %u", length);
               }
+            break;
+          default:
+            proto_tree_add_item (mc_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
             break;
         }                       /* switch */
       pos = pos + length;
@@ -4349,6 +4707,9 @@ dissect_tlv (tvbuff_t * tvb, packet_info * pinfo, proto_tree * tree, void* data 
               break;
             case TLV_END:
               break;
+            default:
+              proto_tree_add_item (tlv_tree, hf_docsis_tlv_unknown, tvb, pos, length, ENC_NA);
+              break;
           }                     /* switch(type) */
 
         pos = pos + length;
@@ -4468,9 +4829,9 @@ proto_register_docsis_tlv (void)
       "Downstream Said Support", HFILL}
     },
     {&hf_docsis_tlv_mcap_up_sid,
-     {".8 # Upstream SAIDs Supported", "docsis_tlv.mcap.upsid",
+     {".8 # Upstream Service Flows Supported", "docsis_tlv.mcap.upsid",
       FT_UINT8, BASE_DEC, NULL, 0x0,
-      "Upstream SID Support", HFILL}
+      "Upstream Service Flows Supported", HFILL}
     },
     {&hf_docsis_tlv_mcap_8021P_filter,
      {".9 802.1P Filtering Support", "docsis_tlv.mcap.dot1pfiltering",
@@ -4701,6 +5062,29 @@ proto_register_docsis_tlv (void)
       FT_UINT8, BASE_DEC, NULL, 0x0,
       "Extended Upstream Transmit Power Capability", HFILL}
     },
+    {&hf_docsis_tlv_mcap_em,
+     {".44 Energy Management Capabilities", "docsis_tlv.mcap.em",
+      FT_UINT32, BASE_HEX, NULL, 0x0,
+      NULL, HFILL}
+    },
+    {&hf_docsis_tlv_mcap_em_1x1,
+     {"Energy Management 1x1 Feature",
+      "docsis_tlv.mcap.em.1x1",
+      FT_BOOLEAN, 32, TFS (&sup_unsup_tfs), 0x1,
+      NULL, HFILL}
+    },
+    {&hf_docsis_tlv_mcap_em_light_sleep,
+     {"DOCSIS Light Sleep Mode",
+      "docsis_tlv.mcap.em.light_sleep",
+      FT_BOOLEAN, 32, TFS (&sup_unsup_tfs), 0x2,
+      NULL, HFILL}
+    },
+    {&hf_docsis_tlv_mcap_cm_status_ack,
+     {".46 CM-STATUS_ACK",
+      "docsis_tlv.mcap.cm_status_ack",
+      FT_UINT8, BASE_DEC, VALS (&sup_unsup_vals), 0x0,
+      "CM_STATUS_ACK", HFILL}
+    },
     {&hf_docsis_tlv_cm_mic,
      {"6 CM MIC", "docsis_tlv.cmmic",
       FT_BYTES, BASE_NONE, NULL, 0x0,
@@ -4848,7 +5232,7 @@ proto_register_docsis_tlv (void)
     {&hf_docsis_tlv_clsfr_err_code,
      {"..2 Error Code", "docsis_tlv.clsfr.err.code",
       FT_UINT8, BASE_DEC|BASE_EXT_STRING, &docsis_conf_code_ext, 0x0,
-      "TCP/UDP Destination Port End", HFILL}
+      "Error Code", HFILL}
     },
     {&hf_docsis_tlv_clsfr_err_msg,
      {"..3 Error Message", "docsis_tlv.clsfr.err.msg",
@@ -4911,6 +5295,51 @@ proto_register_docsis_tlv (void)
      {"..10 Dest Port End", "docsis_tlv.clsfr.ip.dportend",
       FT_UINT16, BASE_DEC, NULL, 0x0,
       "TCP/UDP Destination Port End", HFILL}
+    },
+    {&hf_docsis_tlv_ip6clsfr_tc_low,
+     {"tc-low", "docsis_tlv.clsfr.ip6.tc.low",
+      FT_UINT8, BASE_HEX, NULL, 0x0,
+      NULL, HFILL}
+    },
+    {&hf_docsis_tlv_ip6clsfr_tc_high,
+     {"tc-high", "docsis_tlv.clsfr.ip6.tc.high",
+      FT_UINT8, BASE_HEX, NULL, 0x0,
+      NULL, HFILL}
+    },
+    {&hf_docsis_tlv_ip6clsfr_tc_mask,
+     {"tc-mask", "docsis_tlv.clsfr.ip6.tc.mask",
+      FT_UINT8, BASE_HEX, NULL, 0x0,
+      NULL, HFILL}
+    },
+    {&hf_docsis_tlv_ip6clsfr_flow_label,
+     {"..2 Flow Label", "docsis_tlv.clsfr.ip6.flowlabel",
+      FT_UINT32, BASE_HEX, NULL, 0x0,
+      "Flow Label", HFILL}
+    },
+    {&hf_docsis_tlv_ip6clsfr_next_header,
+     {"..3 Next Header", "docsis_tlv.clsfr.ip6.nextheader",
+      FT_UINT16, BASE_DEC, VALS(next_header_vals), 0x0,
+      "Next Header", HFILL}
+    },
+    {&hf_docsis_tlv_ip6clsfr_src,
+     {"..4 Source Address", "docsis_tlv.clsfr.ip6.src",
+      FT_IPv6, BASE_NONE, NULL, 0x0,
+      "Source Address", HFILL}
+    },
+    {&hf_docsis_tlv_ip6clsfr_src_prefix_length,
+     {"..5 Source Prefix Length", "docsis_tlv.clsfr.ip6.src_prefix_length",
+      FT_UINT8, BASE_DEC, NULL, 0x0,
+      "Source Prefix Length", HFILL}
+    },
+    {&hf_docsis_tlv_ip6clsfr_dst,
+     {"..6 Destination Address", "docsis_tlv.clsfr.ip6.dst",
+      FT_IPv6, BASE_NONE, NULL, 0x0,
+      "Destination Address", HFILL}
+    },
+    {&hf_docsis_tlv_ip6clsfr_dst_prefix_length,
+     {"..7 Destination Prefix Length", "docsis_tlv.clsfr.ip6.dst_prefix_length",
+      FT_UINT8, BASE_DEC, NULL, 0x0,
+      "Destination Prefix Length", HFILL}
     },
 #if 0
     {&hf_docsis_tlv_ethclsfr,
@@ -5159,6 +5588,21 @@ proto_register_docsis_tlv (void)
      {".24 UGS Time Reference", "docsis_tlv.sflow.ugs_timeref",
       FT_UINT32, BASE_DEC, NULL, 0x0,
       "UGS Time Reference", HFILL}
+    },
+    {&hf_docsis_tlv_sflow_req_attr_mask,
+     {".31 Required Attribute Mask", "docsis_tlv.sflow.req_attr_mask",
+      FT_BYTES, BASE_NONE, NULL, 0x0,
+      "Required Attribute Mask", HFILL}
+    },
+    {&hf_docsis_tlv_sflow_forb_attr_mask,
+     {".32 Forbidden Attribute Mask", "docsis_tlv.sflow.forb_attr_mask",
+      FT_BYTES, BASE_NONE, NULL, 0x0,
+      "Forbidden Attribute Mask", HFILL}
+    },
+    {&hf_docsis_tlv_sflow_attr_aggr_rule_mask,
+     {".33 Attribute Aggregation Rule Mask", "docsis_tlv.sflow.attr_aggr_rule_mask",
+      FT_BYTES, BASE_NONE, NULL, 0x0,
+      "Attribute Aggregation Rule Mask", HFILL}
     },
     {&hf_docsis_tlv_sflow_vendor_spec,
      {".43 Vendor Specific Encodings", "docsis_tlv.sflow.vendorspec",
@@ -5988,14 +6432,22 @@ proto_register_docsis_tlv (void)
       FT_IPXNET, BASE_NONE, NULL, 0x0,
       "Source IP Address", HFILL}
     },
+    {&hf_docsis_tlv_unknown,
+      {"Unknown TLV", "docsis_tlv.unknown",
+       FT_BYTES, BASE_NONE, NULL, 0x0,
+       NULL, HFILL}
+    },
   };
 
   static gint *ett[] = {
     &ett_docsis_tlv,
     &ett_docsis_tlv_cos,
     &ett_docsis_tlv_mcap,
+    &ett_docsis_tlv_mcap_em,
     &ett_docsis_tlv_clsfr,
     &ett_docsis_tlv_clsfr_ip,
+    &ett_docsis_tlv_clsfr_ip6,
+    &ett_docsis_tlv_clsfr_ip6_tc,
     &ett_docsis_tlv_clsfr_eth,
     &ett_docsis_tlv_clsfr_err,
     &ett_docsis_tlv_clsfr_dot1q,
