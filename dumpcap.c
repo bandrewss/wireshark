@@ -2419,7 +2419,7 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
 
             pcapng_src->pcapng_pipe_state = PCAPNG_STATE_EXPECT_BLK_HDR;
 
-            //packets_read = 1;
+            //packets_read = 0;
 
             break;
 
@@ -2433,7 +2433,7 @@ pcapng_pipe_dispatch(loop_data *ld, capture_src *pcapng_src, char *errmsg, int e
             break;
     }
 
-    //if(ld->packet_count > 0) packets_read = -1;
+    //if(ld->packet_count > 10) packets_read = -1;
 
     return packets_read;
 }
@@ -2802,6 +2802,9 @@ capture_loop_init_output(capture_options *capture_opts, loop_data *ld, char *err
             get_os_version_info(os_info_str);
 
             appname = g_strdup_printf("Dumpcap (Wireshark) %s", get_ws_vcs_version_info());
+
+            printf("is this it???????????\n");
+
             successful = pcapng_write_session_header_block(ld->pdh,
                                 (const char *)capture_opts->capture_comment,   /* Comment */
                                 cpu_info_str->str,           /* HW */
@@ -2810,6 +2813,8 @@ capture_loop_init_output(capture_options *capture_opts, loop_data *ld, char *err
                                 -1,                          /* section_length */
                                 &ld->bytes_written,
                                 &err);
+
+
             g_string_free(cpu_info_str, TRUE);
             g_free(appname);
 
@@ -2817,22 +2822,32 @@ capture_loop_init_output(capture_options *capture_opts, loop_data *ld, char *err
                 interface_opts = &g_array_index(capture_opts->ifaces, interface_options, i);
                 pcap_src = g_array_index(ld->pcaps, capture_src *, i);
                 if (pcap_src->from_cap_pipe) {
+                    printf("from cap pipe, snaplen: %u\n", pcap_src->pcap_pipe_hdr.snaplen);
                     pcap_src->snaplen = pcap_src->pcap_pipe_hdr.snaplen;
+
                 } else {
                     pcap_src->snaplen = pcap_snapshot(pcap_src->pcap_h);
                 }
-                successful = pcapng_write_interface_description_block(global_ld.pdh,
-                                                                      NULL,                       /* OPT_COMMENT       1 */
-                                                                      interface_opts->name,       /* IDB_NAME          2 */
-                                                                      interface_opts->descr,      /* IDB_DESCRIPTION   3 */
-                                                                      interface_opts->cfilter,    /* IDB_FILTER       11 */
-                                                                      os_info_str->str,           /* IDB_OS           12 */
-                                                                      pcap_src->linktype,
-                                                                      pcap_src->snaplen,
-                                                                      &(global_ld.bytes_written),
-                                                                      0,                          /* IDB_IF_SPEED      8 */
-                                                                      pcap_src->ts_nsec ? 9 : 6,  /* IDB_TSRESOL       9 */
-                                                                      &global_ld.err);
+
+                /*
+                 * if we are piping a pcapng file, writing an interface description block breaks
+                 * the dissection of the incoming packets
+                 */
+                if(!pcap_src->pipe_from_pcapng) {
+                    successful = pcapng_write_interface_description_block(global_ld.pdh,
+                                                                          NULL,                       /* OPT_COMMENT       1 */
+                                                                          interface_opts->name,       /* IDB_NAME          2 */
+                                                                          interface_opts->descr,      /* IDB_DESCRIPTION   3 */
+                                                                          interface_opts->cfilter,    /* IDB_FILTER       11 */
+                                                                          os_info_str->str,           /* IDB_OS           12 */
+                                                                          pcap_src->linktype,
+                                                                          pcap_src->snaplen,
+                                                                          &(global_ld.bytes_written),
+                                                                          0,                          /* IDB_IF_SPEED      8 */
+                                                                          pcap_src->ts_nsec ? 9
+                                                                                            : 6,  /* IDB_TSRESOL       9 */
+                                                                          &global_ld.err);
+                }
             }
 
             g_string_free(os_info_str, TRUE);
