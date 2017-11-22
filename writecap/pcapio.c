@@ -91,7 +91,10 @@ struct pcaprec_hdr {
         guint32 orig_len;       /* actual length of packet */
 };
 
-
+/* Currently we are only supporting the initial version of
+   the file format. */
+#define PCAPNG_MAJOR_VERSION 1
+#define PCAPNG_MINOR_VERSION 0
 
 /* Section Header Block without options and trailing Block Total Length */
 struct shb {
@@ -102,6 +105,7 @@ struct shb {
         guint16 minor_version;
         guint64 section_length;
 };
+#define SECTION_HEADER_BLOCK_TYPE 0x0A0D0D0A
 
 /* Interface Description Block without options and trailing Block Total Length */
 struct idb {
@@ -111,6 +115,7 @@ struct idb {
         guint16 reserved;
         guint32 snap_len;
 };
+#define INTERFACE_DESCRIPTION_BLOCK_TYPE 0x00000001
 
 /* Interface Statistics Block without actual packet, options, and trailing
    Block Total Length */
@@ -121,6 +126,7 @@ struct isb {
         guint32 timestamp_high;
         guint32 timestamp_low;
 };
+#define INTERFACE_STATISTICS_BLOCK_TYPE 0x00000005
 
 /* Enhanced Packet Block without actual packet, options, and trailing
    Block Total Length */
@@ -133,6 +139,7 @@ struct epb {
         guint32 captured_len;
         guint32 packet_len;
 };
+#define ENHANCED_PACKET_BLOCK_TYPE 0x00000006
 
 struct option {
         guint16 type;

@@ -33,16 +33,6 @@
 #define PCAPNG_MAGIC         0x1A2B3C4D
 #define PCAPNG_SWAPPED_MAGIC 0xD4C3B2A1
 
-/* Currently we are only supporting the initial version of
-   the file format. */
-#define PCAPNG_MAJOR_VERSION 1
-#define PCAPNG_MINOR_VERSION 0
-
-#define SECTION_HEADER_BLOCK_TYPE 0x0A0D0D0A
-#define INTERFACE_DESCRIPTION_BLOCK_TYPE 0x00000001
-#define INTERFACE_STATISTICS_BLOCK_TYPE 0x00000005
-#define ENHANCED_PACKET_BLOCK_TYPE 0x00000006
-
 
 /* Writing pcap files */
 

@@ -2330,7 +2330,6 @@ pcapng_read_block(wtap *wth, FILE_T fh, pcapng_t *pn, wtapng_block_t *wblock, in
      * previous blocks.
      */
     if (bh.block_type == BLOCK_TYPE_SHB) {
-
         /*
          * BLOCK_TYPE_SHB has the same value regardless of byte order,
          * so we don't need to byte-swap it.
